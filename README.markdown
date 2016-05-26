@@ -187,7 +187,7 @@ Creates sync-users.jar
 - development.json in ./config to run commands
 
 ```bash
-> java -jar sync-users.jar <COMMANDS>
+> java -jar sync-users.jar <COMMAND> [PATH-TO-CONFIG]
 ```
 
 See the details for Usage
