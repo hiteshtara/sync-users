@@ -17,13 +17,13 @@ Last Updated: May 24, 2016
 
   ### RHEL/CentOS/Fedora
 
-  ```
+  ```bash
   > sudo yum install -y patch libyaml-devel glibc-headers autoconf gcc-c++ glibc-devel readline-devel zlib-devel libffi-devel openssl-devel automake libtool bison sqlite-devel
   ```
 
   ### Devian/Ubuntu/Mint
 
-  ```
+  ```bash
   > sudo apt-get -y install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm3 libgdbm-dev
   ```
 
@@ -87,13 +87,13 @@ Install latest Bundler
 
 or
 
-```
+```bash
 > ./setup.sh
 ```
 
 or
 
-```
+```bash
 > ./setup_jruby.sh
 ```
 
