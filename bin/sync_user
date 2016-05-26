@@ -1,0 +1,163 @@
+#!/usr/bin/env ruby
+
+############################################################################
+# NOTE change this variable if you want to use customized local gems
+#      and they are not defined in $LOAD_PATH
+$gem_install_base = File.expand_path('../gems', File.dirname(__FILE__))
+############################################################################
+
+$default_config = File.expand_path('../config/development.json', File.dirname(__FILE__))
+$config = $default_config
+$view_env = false
+$cmd = nil
+
+def usage
+  puts "\nDEFAULT CONFIG: #{$default_config}"
+  puts "\nUSAGE: bin/sync_user run [PATH-TO-CONFIG]"
+  puts "       bin/sync_user dryrun [PATH-TO-CONFIG]"
+  puts "       bin/sync_user env [PATH-TO-CONFIG]"
+  puts "       bin/sync_user kim-status [PATH-TO-CONFIG]"
+  puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
+  puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user help\n\n"
+end
+
+def show_config
+  get_config
+  puts "Config: #{$config}"
+  $usync.show_env $config
+end
+
+def _check_core_status
+  $usync.check_core_status($config)
+end
+
+def check_core_status
+  get_config
+  puts "Config: #{$config}"
+  r = _check_core_status
+  return true if r[:code] == 404
+  if r[:code] == 401
+    puts "Invalid API Key"
+  else
+    puts "CoreAuth is not working: (#{r[:code]}) #{r[:msg]}"
+  end
+  false
+end
+
+def _check_kim_status
+  $usync.check_kim_status($config)
+end
+
+def check_kim_status
+  get_config
+  puts "Config: #{$config}"
+  _check_kim_status
+end
+
+def pre_run
+  unless _check_kim_status
+    puts "KIM is not reachable"
+    exit 0
+  end
+  unless _check_core_status
+    exit 0
+  end
+end
+
+def print_time(start_time)
+  secs = (Time.now - start_time).to_i 
+  mins = secs / 60
+  secs %= 60 
+  puts "#{mins} mis #{secs} secs elapsed"
+end
+
+def dry_run
+  start_time = Time.now
+  get_config
+  puts "Config: #{$config}"
+  pre_run
+  ap $usync.dry_run($config)
+  print_time(start_time)
+end
+
+def run_sync
+  start_time = Time.now
+  get_config
+  puts "Config: #{$config}"
+  pre_run
+  puts 'Start Synchronizing Users'
+  r = $usync.run($config)
+  $usync.show_results
+  puts "End Successfully"
+  print_time(start_time)
+end
+
+def peek
+  username = ARGV.shift
+  get_config
+  puts "Config: #{$config}"
+  $usync.peek username, $config
+end
+
+def set_local_gem_paths
+  Dir.glob($gem_install_base + '/**/lib').each { |r| $:.unshift(r) }
+end
+
+def set_library_path
+  lib_dir = File.expand_path('../lib', File.dirname(__FILE__))
+  set_local_gem_paths # NOTE disable this line if you do NOT want to use the local gems 
+  $:.unshift(lib_dir)
+end
+
+def boot
+  set_library_path
+  require 'user_synchronizer'
+  require 'awesome_print'
+  $usync = UserSynchronizer.new
+end
+
+def get_config
+  $config = ARGV.shift unless ARGV.empty?
+  unless $config && FileTest.exists?($config)
+    puts "\nERROR: Configuration File Not Found: #{$config}"
+    usage
+    exit 0
+  end
+end
+
+if ARGV.empty?
+  usage
+  exit 0
+end
+
+$cmd = ARGV.shift unless ARGV.empty?
+
+boot
+
+case $cmd
+when 'run'
+  run_sync
+when 'dryrun'
+  dry_run
+when 'env'
+  show_config
+when 'kim-status'
+  if check_kim_status
+    puts "KIM is running"
+  else
+    puts "KIM is not reachable"
+  end
+when 'core-status'
+  if check_core_status
+    puts 'CoreAuth is running'
+  end
+when 'peek'
+  peek
+when 'help'
+  usage
+else
+  puts "Unsupported Command: #{$cmd}"
+  usage
+end
+

@@ -1,0 +1,6 @@
+**/*.log
+*.swp
+Gemfile.lock
+production.json
+development.json
+test.json

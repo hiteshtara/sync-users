@@ -1,0 +1,13 @@
+{
+  "log": "log/example.log",
+  "log_level": "INFO",
+  "api_scheme": "http",
+  "api_host": "localhost",
+  "api_port": "3000",
+  "api_key": "ABCDEFGHIJKLMNOPQSTUVWXYZ012345678.abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCD.A1aB2bC3cD4dE5eF6fG7gH8hI9iJ0jK1k-AbCdEfG",
+  "db_user": "USERID",
+  "db_pass": "PASSWORD",
+  "db_host": "localhost",
+  "db_port": "1521",
+  "db_sid": "ORACLE-SID"
+}
