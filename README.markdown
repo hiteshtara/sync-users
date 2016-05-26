@@ -206,12 +206,12 @@ Creates sync-users.jar
 ---
 
 ```
-> bin/sync_user run [PATH-TO-CONFIG(default:'config/development.json')]
-> bin/sync_user dryrun [PATH-TO-CONFIG(default:'config/development.json')]
-> bin/sync_user env
-> bin/sync_user kim-status
-> bin/sync_user core-status
-> bin/sync_user peek <USERNAME>
+> bin/sync_user run [PATH-TO-CONFIG]
+> bin/sync_user dryrun [PATH-TO-CONFIG]
+> bin/sync_user env [PATH-TO-CONFIG]
+> bin/sync_user kim-status [PATH-TO-CONFIG]
+> bin/sync_user core-status [PATH-TO-CONFIG]
+> bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]
 > bin/sync_user help
 ```
 
