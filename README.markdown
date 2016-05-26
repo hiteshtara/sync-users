@@ -1,11 +1,10 @@
 
-# Sync User
+# Sync Users
 ---
 
 Last Updated: May 24, 2016
 
 ## Requirements
----------------
 
 - Ruby 2.0+
 - Oracle Client or JDBC
@@ -29,7 +28,6 @@ Last Updated: May 24, 2016
   ```
 
 ## Oracle Database Access
----
 
 There two options to aceess Oracle databases:
 
@@ -55,8 +53,7 @@ In case of using JDBC:
 - Put ojdbc7-12.1.0.2.jar in ~/.rbenv/versions/jruby-<VERSION>/lib or <APP_ROOT>/lib
 - Cannot use oci8 gem
 
-### JRUBY
----
+## JRUBY
 
 Confirmed working with both Jruby 9.0.5.0 and 9.1.0.0.
 
@@ -80,7 +77,6 @@ export JRUBY_OPTS="J-Xmx2048m"
 ```
 
 ## Setup
----
 
 ```
 Install Ruby 2.0 or higher (2.3 recommended)
@@ -113,14 +109,13 @@ RVM and rbenv cannot be used at the same time because of the way RVM handles gem
 
 The following lines will set up rbenv environment in the current shell session:
 
-```
+```bash
 export PATH=$HOME/.rbenv/bin:$PATH
 eval "$(rbenv init -)"
 export RBENV_VERSION=2.2.3
 ```
 
 ## Local Gems
----
 
 Gems can be installed under ./gems by the setup.sh.
 $LOAD_PATH will be dynamically changed to include lib directories under ./gems by sync_user.
@@ -129,7 +124,7 @@ You can change the install location
 
 with command line:
 
-```
+```bash
 > bundle install --path=./gems
 ```
 
@@ -137,7 +132,7 @@ or
 
 with config file (<APP-ROOT>/.bundle/config):
 
-```
+```bash
 > BUNDLE_PATH: ./gems
 > BUNDLE_DISABLE_SHARED_GEMS: true
 ```
@@ -148,13 +143,11 @@ you can ignore ./gems directory.
 Also, you can use any directories for gem installation if they are set in $LOAD_PATH.
 
 ## Configuration
----
 
 The default configuration file is config/development.json.
 See the configuration file for details.
 
 ## Logging
----
 
 Logging is configurable via the configuration file.
 The default location of the log file is log/development.log.
@@ -162,9 +155,8 @@ The default location of the log file is log/development.log.
 Supported log level is {DEBUG|INFO|WARN|ERROR|FATAL}
 
 ## Rbenv Commands
----
 
-```
+```bash
 > rbenv versions               # List all installed Rubies
 > rbenv version                # Show current selected Ruby
 > rbenv install -l             # List all the available Rubies
@@ -178,9 +170,8 @@ Supported log level is {DEBUG|INFO|WARN|ERROR|FATAL}
 ```
 
 ## Create Executable Jar File
----
 
-```
+```bash
 > gem install warbler
 > warbler executable jar
 ```
@@ -188,24 +179,22 @@ Supported log level is {DEBUG|INFO|WARN|ERROR|FATAL}
 Creates sync-users.jar
 
 ## Run Jar
----
 
-  ### Requirements
+### Requirements
 
-  - config directory in Application Root
-  - log directory in Application Root
-  - development.json in ./config to run commands
+- config directory in Application Root
+- log directory in Application Root
+- development.json in ./config to run commands
 
-  ```
-  > java -jar sync-users.jar <COMMANDS>
-  ```
+```bash
+> java -jar sync-users.jar <COMMANDS>
+```
 
-  See the details for Usage
+See the details for Usage
 
 ## Usage
----
 
-```
+```bash
 > bin/sync_user run [PATH-TO-CONFIG]
 > bin/sync_user dryrun [PATH-TO-CONFIG]
 > bin/sync_user env [PATH-TO-CONFIG]
@@ -216,17 +205,16 @@ Creates sync-users.jar
 ```
 
 ## With CRON or Non-interactive Shell
----
 
 Rbenv must be enabled before sync_user runs.
 
-```
+```bash
 > 0 4 * * * source $HOME/.bash_profile; PATH/TO/sync_user run config/production.json
 ```
 
 With Executable Jar
 
-```
+```bash
 > 0 4 * * * java -jar PATH/TO/sync_users.jar run config/production.json
 ```
 
