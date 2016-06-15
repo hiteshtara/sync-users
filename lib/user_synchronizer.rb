@@ -199,33 +199,30 @@ class UserSynchronizer < TaskRunner
 
   def core_add_user(new_user, dry = false)
     logger.info "ADD: #{user_to_s(new_user)}"
-    unless dry
-      new_user['password'] = SecureRandom.uuid
-      core.add_user(new_user)
-      return true unless core.error? || core.failure?
-      show_core_error
-      false
-    end
+    return true if dry
+    new_user['password'] = SecureRandom.uuid
+    core.add_user(new_user)
+    return true unless core.error? || core.failure?
+    show_core_error
+    false
   end
 
   def core_update_user(cur_user, updated_user, dry = false)
     logger.info "UPD: #{user_to_s(cur_user)} => #{user_to_s(updated_user)}"
-    unless dry
-      core.update_user(cur_user['id'], updated_user)
-      return true unless core.error? || core.failure?
-      show_core_error
-      false
-    end
+    return true if dry
+    core.update_user(cur_user['id'], updated_user)
+    return true unless core.error? || core.failure?
+    show_core_error
+    false
   end
 
   def core_delete_user(cur_user, dry = false)
     logger.info "DLT: #{user_to_s(cur_user)}"
-    unless dry
-      core.delete_user(cur_user['id'])
-      return true unless core.error? || core.failure?
-      show_core_error
-      false
-    end
+    return true if dry
+    core.delete_user(cur_user['id'])
+    return true unless core.error? || core.failure?
+    show_core_error
+    false
   end
 
   def show_core_error
@@ -275,7 +272,8 @@ class UserSynchronizer < TaskRunner
   def kim_users
     unless @kim_users
       return [] unless kim
-      @kim_users = kim.users
+      #@kim_users = kim.users
+      @kim_users = kim.users(params['target_user_group'])
     end
     @kim_users
   end
