@@ -173,7 +173,7 @@ Supported log level is {DEBUG|INFO|WARN|ERROR|FATAL}
 
 ```bash
 > gem install warbler
-> warbler executable jar
+> warble executable jar
 ```
 
 Creates sync-users.jar
