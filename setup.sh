@@ -51,6 +51,7 @@ if [[ "$platform" == "osx" ]]; then
   brew install ruby-build
   brew install openssl libyaml libffi
   brew tap homebrew/dupes && brew install apple-gcc42
+  RBENV=/usr/local/bin/rbenv
 fi
 
 if [[ "$platform" == "linux" ]]; then
