@@ -1,6 +1,7 @@
-require_relative '../lib/user_synchronizer'
 
-describe UserSynchronizer do
+require_relative '../../lib/user_synchronizer/base'
+
+describe UserSynchronizer::Base do
   let(:kim_admins) {
     ["admin", "15340606", "21550012", "10953327", "20781608", "11363208"]
   }
@@ -93,20 +94,32 @@ describe UserSynchronizer do
     }
   }
 
-  let(:sync) { UserSynchronizer.new }
+  let(:sync) { UserSynchronizer::Base.new }
   let(:config) { './config/test.json' }
+  let(:cnt1) { sync.send :counter }
+  let(:cnt2) { sync.send :counter }
 
   before do
     allow(sync).to receive(:kim_users).and_return(kim_users, kim_users_updated)
     #allow(sync).to receive(:kim_admins).and_return(kim_admins)
     allow(sync).to receive(:core_users).and_return(core_users, core_users_updated)
-    allow(sync).to receive(:core_add_user).and_return(true)
-    allow(sync).to receive(:core_update_user).and_return(true)
-    allow(sync).to receive(:core_delete_user).and_return(true)
   end
 
   describe '#run' do
     it 'synchronizes users correctly' do
+      allow(sync).to receive(:core_update_user) do
+        cnt1[:updated] += 1 
+        true
+      end
+      allow(sync).to receive(:core_delete_user) do
+        cnt1[:removed] += 1 
+        true
+      end
+      allow(sync).to receive(:core_add_user) do
+        cnt1[:added] += 1 
+        true
+      end
+
       expect(sync.run(config)).to eq({
         total: 5,
         added: 4,
@@ -118,6 +131,19 @@ describe UserSynchronizer do
         update_errors: 0,
         remove_errors: 0,
       })
+
+      allow(sync).to receive(:core_update_user) do
+        cnt2[:updated] += 1 
+        true
+      end
+      allow(sync).to receive(:core_delete_user) do
+        cnt2[:removed] += 1 
+        true
+      end
+      allow(sync).to receive(:core_add_user) do
+        cnt2[:added] += 1 
+        true
+      end
 
       expect(sync.run(config)).to eq({
         total: 6,

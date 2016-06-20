@@ -35,7 +35,8 @@ describe MockTask do
           'db_pass'=>'PASSWORD',
           'db_host'=>'localhost',
           'db_port'=>'1521',
-          'db_sid'=>'ORACLE-SID'
+          'db_sid'=>'ORACLE-SID',
+          'target_user_group' => 'UH KC Users'
         }
       )
     end

@@ -112,9 +112,9 @@ end
 
 def boot
   set_library_path
-  require 'user_synchronizer'
+  require 'user_synchronizer/base'
   require 'awesome_print'
-  $usync = UserSynchronizer.new
+  $usync = UserSynchronizer::Base.new
 end
 
 def get_config
