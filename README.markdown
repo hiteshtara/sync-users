@@ -202,7 +202,7 @@ See the details for Usage
 > bin/sync_user core-status [PATH-TO-CONFIG]
 > bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]
 > bin/sync_user view-errors [PATH-TO-CONFIG]
-> bin/sync_user retry_errors <FILENAME> [PATH-TO-CONFIG]
+> bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]
 > bin/sync_user help
 ```
 

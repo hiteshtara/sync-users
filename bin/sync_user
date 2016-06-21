@@ -20,7 +20,7 @@ def usage
   puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
-  puts "       bin/sync_user retry_errors <FILENAME> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
 end
 
