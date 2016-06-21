@@ -81,6 +81,18 @@ module UserSynchronizer
       puts '-' * 80
     end
 
+    def find_all_kim_users_by_name(username, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      kim.find_all_by_username(username)
+    end
+
+    def find_all_kim_users_by_email(email, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      kim.find_all_by_email(email)
+    end
+
     def find_core_user(username_or_email, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       core.get_user(username_or_email)

@@ -163,12 +163,25 @@ class KimUsersBase
   end
 
   def select_kim_user_by_name_sql(name)
-    #SELECT_KIM_GROUP_USERS + "      AND p.PRNCPL_NM = '#{name}'"
-    SELECT_KIM_ALL_USERS + "      AND p.PRNCPL_NM = '#{name}'"
+    SELECT_KIM_GROUP_USERS + "      AND p.PRNCPL_NM = '#{name}'"
+    #SELECT_KIM_ALL_USERS + "      AND p.PRNCPL_NM = '#{name}'"
+  end
+
+  def select_kim_user_by_email_sql(email)
+    SELECT_KIM_GROUP_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
+    #SELECT_KIM_ALL_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
   end
 
   def find_user(username)
     select_one(select_kim_user_by_name_sql(username))
+  end
+
+  def find_all_by_username(username)
+    select_all(select_kim_user_by_name_sql(username))
+  end
+
+  def find_all_by_email(email)
+    select_all(select_kim_user_by_email_sql(email))
   end
 
   def top_user
