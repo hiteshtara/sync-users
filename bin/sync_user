@@ -22,6 +22,7 @@ def usage
   puts "       bin/sync_user find-kim-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
   puts "       bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
+  puts "       bin/sync_user analyze-duplicates [PATH-TO-CONFIG]"
   puts "       bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
 end
@@ -128,6 +129,12 @@ def view_errors
   $usync.show_sync_errors $config
 end
 
+def analyze_duplicates
+  get_config
+  puts "Config: #{$config}"
+  $usync.analyze_duplicates $config
+end
+
 def retry_errors
   fname = ARGV.shift
   unless fname && FileTest.exists?(fname)
@@ -203,6 +210,8 @@ when 'find-core-user'
   find_core_user
 when 'view-errors'
   view_errors
+when 'analyze-duplicates'
+  analyze_duplicates
 when 'retry-errors'
   retry_errors
 when 'help'

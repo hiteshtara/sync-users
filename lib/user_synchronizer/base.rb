@@ -51,6 +51,29 @@ module UserSynchronizer
       counter
     end
 
+    def analyze_duplicates(params_or_path = nil)
+      each_error(params['sync_errors']) do |err|
+        get_duplicate_errors(err).each do |dup|
+          dup['fields'].each do |field|
+            case field
+            when 'email' then analyze_email_duplicates(err)
+            when 'username' then analyze_username_duplicates(err)
+            else
+              raise "Unknown Duplicate Key: #{type}\n   #{h.inspect}\n"
+            end
+          end
+        end
+      end 
+    end
+
+    def analyze_other_errors(params_or_path = nil)
+      each_error(params['sync_errors']) do |err|
+        unless get_other_errors(err).empty?
+          ap err
+        end
+      end 
+    end
+
     def show_sync_errors(params_or_path = nil)
       set_env(params_or_path) if params_or_path
       read_errors(params['sync_errors'])
@@ -171,6 +194,10 @@ module UserSynchronizer
       sprintf("[%-5s] %8d %-12s %s", r['role'], r['schoolId'], r['username'], r['email']) 
     end
 
+    def user_to_s_long(r)
+      user_to_s(r) + sprintf(" %s, %s", r['firstName'], r['lastName'])
+    end
+
     # Ignore leading and trailing spaces of name; ??? core removes them ???
     # Ignore case of email; ??? core make it all lowercase ???
     def compare_user(a, b)
@@ -288,11 +315,6 @@ module UserSynchronizer
 
     def show_core_error
       core.show_error(logger)
-      #if core.error?
-      #  core.show_fatal_error(logger)
-      #elsif core.failure?
-      #  core.show_error_response(logger)
-      #end
     end
 
     def kim_user_client
@@ -334,7 +356,6 @@ module UserSynchronizer
     def kim_users
       unless @kim_users
         return [] unless kim
-        #@kim_users = kim.users
         @kim_users = kim.users(params['target_user_group'])
       end
       @kim_users
@@ -373,6 +394,39 @@ module UserSynchronizer
         end
       end
       @core_map
+    end
+
+    def get_duplicate_errors(error)
+      return [] unless error && error['error'] && error['error']['type'] == 'error'
+      return [] unless details = error['error']['details']
+      details.select { |h| h['name'] == 'DuplicateKeyError' }
+    end
+
+    def get_other_errors(error)
+      return [] unless error && error['error'] && error['error']['details']
+      error['error']['details'].reject { |h| h['name'] == 'DuplicateKeyError' }
+    end
+
+    def analyze_email_duplicates(err, params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      email = err['new_user']['email']
+      users = find_all_kim_users_by_email(email, params_or_path = nil)
+      puts '--< EMAIL DUPLICATES >' + '-' * 78
+      users.each do |r|
+        puts user_to_s_long(r)
+      end
+      nil
+    end
+      
+    def analyze_username_duplicates(err, params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      name = err['new_user']['username']
+      users = find_all_kim_users_by_name(name, params_or_path = nil)
+      puts '--< USERNAME DUPLICATES >' + '-' * 75
+      users.each do |r|
+        puts user_to_s_long(r)
+      end
+      nil
     end
   end
 end
