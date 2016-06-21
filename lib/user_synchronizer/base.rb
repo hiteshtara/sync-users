@@ -31,16 +31,11 @@ module UserSynchronizer
       ruby_engine == 'jruby'
     end
 
-    #def has_errors?
-    #  !!(@results && !@results[:errors].empty?)
-    #end
-
     def retry_errors(fname, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       reset_counter!
       logger.info 'Start Synchronizing Users'
       each_error(fname) do |h|
-        p h
         increment_total
         case h['action']
         when 'add'
@@ -178,9 +173,7 @@ module UserSynchronizer
     end
 
     def reset!
-      #reset_counter!
       @params = nil
-      #@results = nil
       @kim = nil
       @kim_users = nil
       @kim_admins = nil
