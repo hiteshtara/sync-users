@@ -19,6 +19,8 @@ def usage
   puts "       bin/sync_user kim-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
+  puts "       bin/sync_user retry_errors <FILENAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
 end
 
@@ -100,6 +102,27 @@ def peek
   $usync.peek username, $config
 end
 
+def view_errors
+  get_config
+  puts "Config: #{$config}"
+  $usync.show_sync_errors $config
+end
+
+def retry_errors
+  fname = ARGV.shift
+  unless fname && FileTest.exists?(fname)
+    puts "\nERROR: Error File Not Found: #{fname}"
+    usage
+    exit 0
+  end
+  start_time = Time.now
+  get_config
+  puts "Config: #{$config}"
+  pre_run
+  ap $usync.retry_errors(fname, $config)
+  print_time(start_time)
+end
+
 def set_local_gem_paths
   Dir.glob($gem_install_base + '/**/lib').each { |r| $:.unshift(r) }
 end
@@ -154,6 +177,10 @@ when 'core-status'
   end
 when 'peek'
   peek
+when 'view-errors'
+  view_errors
+when 'retry-errors'
+  retry_errors
 when 'help'
   usage
 else

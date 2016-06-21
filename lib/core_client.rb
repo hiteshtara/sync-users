@@ -107,13 +107,36 @@ class CoreClient
     !!@error
   end
 
+  def show_error(out = STDOUT)
+    if error?
+      show_fatal_error(out)
+    elsif failure?
+      show_error_response(out)
+    end
+  end
+
   def show_fatal_error(out = STDOUT)
     out.error "FATAL: #{@error.to_s}"
-    out.error @error.backtrace.join("\n")
+    out.error @error.backtrace.join(";")
   end
 
   def show_error_response(out = STDOUT)
     out.error "ERROR [#{@response.code}] #{@response.msg} #{@response.body}"
+  end
+
+  def record_error(r)
+    h = r[:error] = {}
+    if error?
+      h[:type] = 'fatal'
+      h[:message] = @error.to_s
+      h[:backtrace] = @error.backtrace.join("\n")
+    elsif failure?
+      h[:type] = 'error'
+      h[:http_code] = @response.code
+      h[:message] = @response.msg
+      h[:details] = JSON.parse(@response.body)['errors'] 
+    end
+    r
   end
 
   private

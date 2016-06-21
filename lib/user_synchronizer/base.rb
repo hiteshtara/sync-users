@@ -5,6 +5,7 @@ require 'awesome_print'
 require 'task_runner'
 require 'core_client'
 require 'user_synchronizer/counter'
+require 'user_synchronizer/error_recorder'
 
 if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
   require 'kim_users_jdbc'
@@ -15,6 +16,7 @@ end
 module UserSynchronizer
   class Base < TaskRunner
     include UserSynchronizer::Counter
+    include UserSynchronizer::ErrorRecorder
 
     KEY = 'username'
 
@@ -32,6 +34,32 @@ module UserSynchronizer
     #def has_errors?
     #  !!(@results && !@results[:errors].empty?)
     #end
+
+    def retry_errors(fname, params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      reset_counter!
+      logger.info 'Start Synchronizing Users'
+      each_error(fname) do |h|
+        p h
+        increment_total
+        case h['action']
+        when 'add'
+          core_add_user(h['new_user'], false)
+        when 'update'
+          core_update_user('new_user', h['cur_user'], false)
+        when 'delete'
+          core_delete_user(h['user'], false)
+        end
+      end 
+      logger.info "RESULTS: #{counter}"
+      logger.info "End Successfully"
+      counter
+    end
+
+    def show_sync_errors(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      read_errors(params['sync_errors'])
+    end
 
     def show_results
       ap counter
@@ -106,16 +134,20 @@ module UserSynchronizer
           if compare_user(original, user)
             puts "SAME: No Update"
           else
-            core_update_user(user, original, false)
-            puts "Updated"
+            if core_update_user(user, original, false)
+              puts "Updated"
+            end
           end
         else
-          core_add_user(original, false)
-          puts "Added"
+          if core_add_user(original, false)
+            puts "Added"
+          end
         end
       else
         if user
-          core_delete_user(user, false)
+          if core_delete_user(user, false)
+            puts "Deleted"
+          end
         else
           puts "Ignored"
         end
@@ -146,7 +178,7 @@ module UserSynchronizer
     end
 
     def reset!
-      reset_counter!
+      #reset_counter!
       @params = nil
       #@results = nil
       @kim = nil
@@ -158,6 +190,8 @@ module UserSynchronizer
     end
 
     def sync_users(dry)
+      reset_counter!
+      set_error_out(params['sync_errors']) if params['sync_errors']
       logger.info 'Start Synchronizing Users'
       kim_users.each do |original|
         increment_total
@@ -196,6 +230,7 @@ module UserSynchronizer
       core.add_user(new_user)
       if core.error? || core.failure?
         increment_add_errors
+        record_error(action: :add, new_user: new_user) if params['sync_errors']
         show_core_error
         false
       else
@@ -213,6 +248,7 @@ module UserSynchronizer
       core.update_user(cur_user['id'], updated_user)
       if core.error? || core.failure?
         increment_update_errors
+        record_error(action: :update, cur_user: cur_user, new_user: updated_user) if params['sync_errors']
         show_core_error
         false
       else
@@ -230,6 +266,7 @@ module UserSynchronizer
       core.delete_user(cur_user['id'])
       if core.error? || core.failure?
         increment_remove_errors
+        record_error(action: :delete, cur_user: cur_user) if params['sync_errors']
         show_core_error
         false
       else
@@ -239,11 +276,12 @@ module UserSynchronizer
     end
 
     def show_core_error
-      if core.error?
-        core.show_fatal_error(logger)
-      elsif core.failure?
-        core.show_error_response(logger)
-      end
+      core.show_error(logger)
+      #if core.error?
+      #  core.show_fatal_error(logger)
+      #elsif core.failure?
+      #  core.show_error_response(logger)
+      #end
     end
 
     def kim_user_client
