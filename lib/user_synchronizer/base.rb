@@ -81,6 +81,11 @@ module UserSynchronizer
       puts '-' * 80
     end
 
+    def find_core_user(username_or_email, params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      core.get_user(username_or_email)
+    end
+
     def dry_run(params_or_path = nil, args = {})
       args.merge!(dry_run: true)
       run(params_or_path, args)
@@ -89,7 +94,8 @@ module UserSynchronizer
     def peek(username, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       b = find_kim_user(username)
-      a = core_user(username) 
+      #a = core_user(username) 
+      a = find_core_user(username) 
 
       puts '--< CORE >' + '-' * 70
       if a
@@ -335,6 +341,7 @@ module UserSynchronizer
       @kim_admins
     end
 
+    # MAX 1,000,000
     def core_users
       unless @core_users
         @core_users = core.get_users

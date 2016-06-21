@@ -19,6 +19,7 @@ def usage
   puts "       bin/sync_user kim-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
   puts "       bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
@@ -102,6 +103,13 @@ def peek
   $usync.peek username, $config
 end
 
+def find_core_user
+  query = ARGV.shift
+  get_config
+  puts "Config: #{$config}"
+  ap $usync.find_core_user query, $config
+end
+
 def view_errors
   get_config
   puts "Config: #{$config}"
@@ -177,6 +185,8 @@ when 'core-status'
   end
 when 'peek'
   peek
+when 'find-core-user'
+  find_core_user
 when 'view-errors'
   view_errors
 when 'retry-errors'

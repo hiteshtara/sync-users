@@ -10,7 +10,6 @@ class KimUsersBase
   DEFAULT_HOST = 'localhost'
   DEFAULT_PORT = 1521 
 
-
   SELECT_KIM_ALL_USERS = <<-EOS
     SELECT p.PRNCPL_ID AS "schoolId"
               ,p.PRNCPL_NM AS "username"

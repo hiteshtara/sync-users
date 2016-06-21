@@ -1,3 +1,4 @@
+require 'cgi'
 require 'net/http'
 require 'rest-client'
 require 'json'
@@ -53,7 +54,8 @@ class CoreClient
     end
     params = params.reject { |k, v| k == :id }
     unless params.empty?
-      r += '?' + params.map { |k, v| "#{k}=#{v}" }.join('&')
+      query = params.map { |k, v| "#{k}=#{CGI.escape(v)}" }.join('&')
+      r += '?' + query
     end
     r
   end
@@ -194,9 +196,5 @@ class CoreClient
 
   def auth_key
     { Authorization: "Bearer #{@api_key}" }
-  end
-
-  def read_config(path)
-    JSON.parse(IO.read(path))
   end
 end
