@@ -8,12 +8,6 @@ require 'core_client'
 require 'user_synchronizer/counter'
 require 'user_synchronizer/error_recorder'
 
-#if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
-#  require 'kim_users_jdbc'
-#else
-#  require 'kim_users'
-#end
-
 module UserSynchronizer
   class Base < TaskRunner
     include KimClientSwitcher
@@ -21,17 +15,6 @@ module UserSynchronizer
     include UserSynchronizer::ErrorRecorder
 
     KEY = 'username'
-
-    #def ruby_engine
-    #  unless @ruby_engine
-    #    @ruby_engine = defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby' ? 'jruby' : 'mri'
-    #  end
-    #  @ruby_engine
-    #end
-
-    #def jruby?
-    #  ruby_engine == 'jruby'
-    #end
 
     def retry_errors(fname, params_or_path = nil)
       set_env(params_or_path) if params_or_path
@@ -318,10 +301,6 @@ module UserSynchronizer
     def show_core_error
       core.show_error(logger)
     end
-
-    #def kim_user_client
-    #  jruby? ? KimUsersJdbc : KimUsers
-    #end
 
     def kim
       unless @kim

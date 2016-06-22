@@ -7,20 +7,20 @@ module KimClientSwitcher
     end
   end
 
-  def ruby_engine
-    unless @ruby_engine
-      @ruby_engine = defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby' ? 'jruby' : 'mri'
-    end
-    @ruby_engine
+  private
+
+  def kim_user_client
+    jruby? ? ::KimUsersJdbc : ::KimUsers
   end
 
   def jruby?
     ruby_engine == 'jruby'
   end
 
-  private
-
-  def kim_user_client
-    jruby? ? ::KimUsersJdbc : ::KimUsers
+  def ruby_engine
+    unless @ruby_engine
+      @ruby_engine = defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby' ? 'jruby' : 'mri'
+    end
+    @ruby_engine
   end
 end
