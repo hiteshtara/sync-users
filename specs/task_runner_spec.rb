@@ -20,6 +20,7 @@ describe MockTask do
       expect(sync.params).to eq(
         {
           'log' => 'log/example.log',
+          'sync_errors' => 'log/sync.errors',
           'log_level' => 'INFO',
           'api_scheme'=>'http',
           'api_host'=>'localhost',

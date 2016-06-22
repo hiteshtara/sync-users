@@ -32,7 +32,7 @@ class CoreClient
     @api_key = opt['api_key']
   end
 
-  def read_config(path)
+  def read_config(params_or_path)
     unless FileTest.exists?(params_or_path)
       raise IOError, "CoreClient Config File Not Found: #{path}"
     end
@@ -54,7 +54,7 @@ class CoreClient
     end
     params = params.reject { |k, v| k == :id }
     unless params.empty?
-      query = params.map { |k, v| "#{k}=#{CGI.escape(v)}" }.join('&')
+      query = params.map { |k, v| "#{k}=#{v.respond_to?(:encoding) ? CGI.escape(v) : v}" }.join('&')
       r += '?' + query
     end
     r
