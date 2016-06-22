@@ -1,5 +1,5 @@
 
-require_relative '../../lib/user_synchronizer/base'
+require 'user_synchronizer/base'
 
 describe UserSynchronizer::Base do
   let(:kim_admins) {

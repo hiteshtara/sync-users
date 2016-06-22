@@ -1,4 +1,4 @@
-require_relative '../../lib/user_synchronizer/counter'
+require 'user_synchronizer/counter'
 
 class CounterMock
   include UserSynchronizer::Counter

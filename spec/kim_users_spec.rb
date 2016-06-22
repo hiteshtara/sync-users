@@ -1,10 +1,7 @@
-if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
-  require_relative '../lib/kim_users_jdbc'
-  TARGET = KimUsersJdbc
-else
-  require_relative '../lib/kim_users'
-  TARGET = KimUsers
-end
+require 'kim_client_switcher'
+
+include KimClientSwitcher
+TARGET = send(:kim_user_client)
 
 def create_target
   path = File.expand_path('../config/test.json', File.dirname(__FILE__))

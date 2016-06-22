@@ -1,4 +1,4 @@
-require_relative '../lib/task_runner'
+require 'task_runner'
 
 class MockTask < TaskRunner
   def do_task(args = {}); end

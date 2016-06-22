@@ -1,4 +1,4 @@
-require_relative '../lib/core_client'
+require 'core_client'
 
 def compare(a, b)
   a['username'] == b['username'] && 
