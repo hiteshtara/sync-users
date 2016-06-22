@@ -92,13 +92,15 @@ module UserSynchronizer
     def find_all_kim_users_by_name(username, params_or_path = nil)
       return nil unless kim
       set_env(params_or_path) if params_or_path
-      kim.find_all_by_username(username)
+      #kim.find_all_by_username(username)
+      kim_users.select{ |h| h['username'] == username }
     end
 
     def find_all_kim_users_by_email(email, params_or_path = nil)
       return nil unless kim
       set_env(params_or_path) if params_or_path
-      kim.find_all_by_email(email)
+      #kim.find_all_by_email(email)
+      kim_users.select{ |h| h['email'] == email }
     end
 
     def find_core_user(username_or_email, params_or_path = nil)
@@ -145,7 +147,8 @@ module UserSynchronizer
         puts "KIM User Not Found: #{username}"
         return
       end
-      user = core_user(username) 
+      #user = core_user(username) 
+      user = find_core_user(username) 
       if user
         puts "Core User Found"
       end
