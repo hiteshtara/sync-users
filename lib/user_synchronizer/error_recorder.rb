@@ -10,22 +10,23 @@ module UserSynchronizer
     end
 
     def each_error(fname)
-      unless FileTest.exists?(fname)
-        puts "File Not Found: #{fname}"
-        return
-      end
-
-      IO.foreach(fname) do |l|
+      fio = open_error_file(fname)
+      fio.each_line do |l|
         yield JSON.parse(l.chomp)
       end
+      fio.close
     end
 
     private
 
+    def open_error_file(fname)
+      File.open(fname)
+    end
+
     def set_error_out(fname_or_stream = STDOUT)
       if fname_or_stream.is_a? String
         @error_out = File.open(fname_or_stream, 'w')
-      elsif fname_or_stream.is_a? File
+      else
         @error_out = fname_or_stream
       end
     end
