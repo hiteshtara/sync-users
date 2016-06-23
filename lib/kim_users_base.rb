@@ -81,6 +81,7 @@ class KimUsersBase
           AND e.ACTV_IND = 'Y' -- active email
           AND p.PRNCPL_ID = admins.PRNCPL_ID(+)
           AND g.GRP_ID = gm.GRP_ID
+          AND gm.actv_to_dt is null
           AND gm.MBR_ID = p.PRNCPL_ID
   EOS
 
