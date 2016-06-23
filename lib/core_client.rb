@@ -1,3 +1,4 @@
+require 'cgi'
 require 'net/http'
 require 'rest-client'
 require 'json'
@@ -31,7 +32,7 @@ class CoreClient
     @api_key = opt['api_key']
   end
 
-  def read_config(path)
+  def read_config(params_or_path)
     unless FileTest.exists?(params_or_path)
       raise IOError, "CoreClient Config File Not Found: #{path}"
     end
@@ -53,7 +54,8 @@ class CoreClient
     end
     params = params.reject { |k, v| k == :id }
     unless params.empty?
-      r += '?' + params.map { |k, v| "#{k}=#{v}" }.join('&')
+      query = params.map { |k, v| "#{k}=#{v.respond_to?(:encoding) ? CGI.escape(v) : v}" }.join('&')
+      r += '?' + query
     end
     r
   end
@@ -107,13 +109,36 @@ class CoreClient
     !!@error
   end
 
+  def show_error(out = STDOUT)
+    if error?
+      show_fatal_error(out)
+    elsif failure?
+      show_error_response(out)
+    end
+  end
+
   def show_fatal_error(out = STDOUT)
     out.error "FATAL: #{@error.to_s}"
-    out.error @error.backtrace.join("\n")
+    out.error @error.backtrace.join(";")
   end
 
   def show_error_response(out = STDOUT)
     out.error "ERROR [#{@response.code}] #{@response.msg} #{@response.body}"
+  end
+
+  def record_error(r)
+    h = r[:error] = {}
+    if error?
+      h[:type] = 'fatal'
+      h[:message] = @error.to_s
+      h[:backtrace] = @error.backtrace.join("\n")
+    elsif failure?
+      h[:type] = 'error'
+      h[:http_code] = @response.code
+      h[:message] = @response.msg
+      h[:details] = JSON.parse(@response.body)['errors'] 
+    end
+    r
   end
 
   private
@@ -171,9 +196,5 @@ class CoreClient
 
   def auth_key
     { Authorization: "Bearer #{@api_key}" }
-  end
-
-  def read_config(path)
-    JSON.parse(IO.read(path))
   end
 end

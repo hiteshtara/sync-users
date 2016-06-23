@@ -201,6 +201,10 @@ See the details for Usage
 > bin/sync_user kim-status [PATH-TO-CONFIG]
 > bin/sync_user core-status [PATH-TO-CONFIG]
 > bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]
+> bin/sync_user find-kim-user <USERNAME|EMAIL> [PATH-TO-CONFIG]
+> bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]
+> bin/sync_user view-errors [PATH-TO-CONFIG]
+> bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]
 > bin/sync_user help
 ```
 

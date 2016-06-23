@@ -1,4 +1,4 @@
-require_relative '../lib/task_runner'
+require 'task_runner'
 
 class MockTask < TaskRunner
   def do_task(args = {}); end
@@ -20,6 +20,7 @@ describe MockTask do
       expect(sync.params).to eq(
         {
           'log' => 'log/example.log',
+          'sync_errors' => 'log/sync.errors',
           'log_level' => 'INFO',
           'api_scheme'=>'http',
           'api_host'=>'localhost',
@@ -35,7 +36,8 @@ describe MockTask do
           'db_pass'=>'PASSWORD',
           'db_host'=>'localhost',
           'db_port'=>'1521',
-          'db_sid'=>'ORACLE-SID'
+          'db_sid'=>'ORACLE-SID',
+          'target_user_group' => 'UH KC Users'
         }
       )
     end

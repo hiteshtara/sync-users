@@ -19,6 +19,11 @@ def usage
   puts "       bin/sync_user kim-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user find-kim-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
+  puts "       bin/sync_user analyze-duplicates [PATH-TO-CONFIG]"
+  puts "       bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
 end
 
@@ -100,6 +105,51 @@ def peek
   $usync.peek username, $config
 end
 
+def find_kim_user
+  query = ARGV.shift
+  get_config
+  puts "Config: #{$config}"
+  if query =~ /@/
+    ap($usync.find_all_kim_users_by_email(query, $config))
+  else
+    ap($usync.find_all_kim_users_by_name(query, $config))
+  end
+end
+
+def find_core_user
+  query = ARGV.shift
+  get_config
+  puts "Config: #{$config}"
+  ap $usync.find_core_user query, $config
+end
+
+def view_errors
+  get_config
+  puts "Config: #{$config}"
+  $usync.show_sync_errors $config
+end
+
+def analyze_duplicates
+  get_config
+  puts "Config: #{$config}"
+  $usync.analyze_duplicates $config
+end
+
+def retry_errors
+  fname = ARGV.shift
+  unless fname && FileTest.exists?(fname)
+    puts "\nERROR: Error File Not Found: #{fname}"
+    usage
+    exit 0
+  end
+  start_time = Time.now
+  get_config
+  puts "Config: #{$config}"
+  pre_run
+  ap $usync.retry_errors(fname, $config)
+  print_time(start_time)
+end
+
 def set_local_gem_paths
   Dir.glob($gem_install_base + '/**/lib').each { |r| $:.unshift(r) }
 end
@@ -112,9 +162,9 @@ end
 
 def boot
   set_library_path
-  require 'user_synchronizer'
+  require 'user_synchronizer/base'
   require 'awesome_print'
-  $usync = UserSynchronizer.new
+  $usync = UserSynchronizer::Base.new
 end
 
 def get_config
@@ -154,6 +204,16 @@ when 'core-status'
   end
 when 'peek'
   peek
+when 'find-kim-user'
+  find_kim_user
+when 'find-core-user'
+  find_core_user
+when 'view-errors'
+  view_errors
+when 'analyze-duplicates'
+  analyze_duplicates
+when 'retry-errors'
+  retry_errors
 when 'help'
   usage
 else
