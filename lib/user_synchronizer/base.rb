@@ -179,7 +179,7 @@ module UserSynchronizer
     end
 
     def user_to_s(r)
-      sprintf("[%-5s] %8d %-12s %s", r['role'], r['schoolId'], r['username'], r['email']) 
+      sprintf("[%-5s] %8s %-12s %s", r['role'], r['schoolId'], r['username'], r['email']) 
     end
 
     def user_to_s_long(r)
