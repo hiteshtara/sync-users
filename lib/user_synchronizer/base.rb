@@ -68,6 +68,11 @@ module UserSynchronizer
       ap counter
     end
 
+    def show_sql(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      puts kim.select_kim_users_sql(params['target_user_groups'])
+    end
+
     def check_core_status(params_or_path = nil)
       set_env(params_or_path) if params_or_path
       core.check_status
@@ -352,7 +357,7 @@ module UserSynchronizer
     def kim_users
       unless @kim_users
         return [] unless kim
-        @kim_users = kim.users(params['target_user_group'])
+        @kim_users = kim.users(params['target_user_groups'])
       end
       @kim_users
     end

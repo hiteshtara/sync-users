@@ -1,6 +1,7 @@
 require 'core_client'
 
 def compare(a, b)
+  return false if a.nil? || b.nil?
   a['username'] == b['username'] && 
   a['schoolId'] == b['schoolId'] && 
   a['email'].downcase == b['email'].downcase && 
@@ -12,6 +13,7 @@ end
 
 def delete_user(client, school_id)
   res = client.get_user(school_id)
+  return unless res
   if r = res.last
     if r['role'] == 'admin'
       puts 'Do not delete admin'

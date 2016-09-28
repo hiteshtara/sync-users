@@ -147,30 +147,32 @@ class KimUsersBase
     ap params
   end
 
-  def select_kim_users_sql(group = nil)
-    if group && !group.empty?
-      if group == 'all'
+  def select_kim_users_sql(groups = nil)
+    if groups && !groups.empty?
+      if groups == 'all'
         SELECT_KIM_ALL_USERS
       else
-        select_kim_users_by_group_sql(group)
+        select_kim_users_by_groups_sql(groups)
       end
     else
       SELECT_KIM_GROUP_USERS
     end
   end
 
-  def select_kim_users_by_group_sql(group)
-    SELECT_KIM_GROUP_USERS + "      AND g.GRP_NM = '#{group}'"
+  def select_kim_users_by_groups_sql(groups = [])
+    sql = SELECT_KIM_GROUP_USERS
+    unless groups.empty?
+      sql += "      AND g.GRP_NM in ('" + groups.join("', '") + "')"
+    end
+    sql
   end
 
   def select_kim_user_by_name_sql(name)
     SELECT_KIM_GROUP_USERS + "      AND p.PRNCPL_NM = '#{name}'"
-    #SELECT_KIM_ALL_USERS + "      AND p.PRNCPL_NM = '#{name}'"
   end
 
   def select_kim_user_by_email_sql(email)
     SELECT_KIM_GROUP_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
-    #SELECT_KIM_ALL_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
   end
 
   def find_user(username)
@@ -194,13 +196,13 @@ class KimUsersBase
     select_all(SELECT_KIM_ALL_USERS)
   end
 
-  def users(group = nil)
+  def users(groups = nil)
     nil if has_error?
     #unless @users
-    #  @users = select_all(select_kim_users_sql(group))
+    #  @users = select_all(select_kim_users_sql(groups))
     #end
     #@users 
-    select_all(select_kim_users_sql(group))
+    select_all(select_kim_users_sql(groups))
   end
 
   def admin_users
