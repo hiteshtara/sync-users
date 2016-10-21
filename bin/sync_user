@@ -25,6 +25,8 @@ def usage
   puts "       bin/sync_user analyze-duplicates [PATH-TO-CONFIG]"
   puts "       bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-sql [PATH-TO-CONFIG]"
+  puts "       bin/sync_user view-core-only-users [PATH-TO-CONFIG]"
+  puts "       bin/sync_user view-kim-only-users [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
 end
 
@@ -136,6 +138,18 @@ def view_sql
   $usync.show_sql $config
 end
 
+def view_core_only_users
+  get_config
+  puts "Config: #{$config}"
+  $usync.show_core_only_users $config
+end
+
+def view_kim_only_users
+  get_config
+  puts "Config: #{$config}"
+  $usync.show_kim_only_users $config
+end
+
 def analyze_duplicates
   get_config
   puts "Config: #{$config}"
@@ -219,6 +233,10 @@ when 'view-errors'
   view_errors
 when 'view-sql'
   view_sql
+when 'view-core-only-users'
+  view_core_only_users
+when 'view-kim-only-users'
+  view_kim_only_users
 when 'analyze-duplicates'
   analyze_duplicates
 when 'retry-errors'

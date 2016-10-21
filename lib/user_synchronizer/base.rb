@@ -73,6 +73,24 @@ module UserSynchronizer
       puts kim.select_kim_users_sql(params['target_user_groups'])
     end
 
+    def show_kim_only_users(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      only_kim = kim_only_users
+      only_kim.each do |r|
+        puts user_to_s(r)
+      end
+      puts "TOTAL KIM #{kim_users.length},  CORE #{core_users.length},  ONLY KIM #{only_kim.length}"
+    end
+
+    def show_core_only_users(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      only_core = core_only_users
+      only_core.each do |r|
+        puts user_to_s(r)
+      end
+      puts "TOTAL KIM #{kim_users.length},  CORE #{core_users.length},  ONLY CORE #{only_core.length}"
+    end
+
     def check_core_status(params_or_path = nil)
       set_env(params_or_path) if params_or_path
       core.check_status
@@ -184,7 +202,7 @@ module UserSynchronizer
     end
 
     def user_to_s(r)
-      sprintf("[%-5s] %8s %-12s %s", r['role'], r['schoolId'], r['username'], r['email']) 
+      sprintf("[%-7s] %8s %-12s %s", r['role'], r['schoolId'], r['username'], r['email']) 
     end
 
     def user_to_s_long(r)
@@ -381,6 +399,22 @@ module UserSynchronizer
         @core_users = core.get_users
       end
       @core_users
+    end
+
+    def core_only_users
+      only_core = core_user_map.clone
+      kim_users.each do |r|
+        only_core.delete(r['username']) if only_core[r['username']]
+      end
+      only_core.values
+    end
+
+    def kim_only_users
+      only_kim = []
+      kim_users.each do |r|
+        only_kim << r unless core_user_map[r['username']]
+      end
+      only_kim
     end
 
     def core_user(username)
