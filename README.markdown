@@ -205,6 +205,9 @@ See the details for Usage
 > bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]
 > bin/sync_user view-errors [PATH-TO-CONFIG]
 > bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]
+> bin/sync_user view-sql [PATH-TO-CONFIG]
+> bin/sync_user view-core-only-users [PATH-TO-CONFIG]
+> bin/sync_user view-kim-only-users [PATH-TO-CONFIG]
 > bin/sync_user help
 ```
 
