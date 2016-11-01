@@ -222,6 +222,6 @@ Rbenv must be enabled before sync_user runs.
 With Executable Jar
 
 ```bash
-> 0 4 * * * java -jar PATH/TO/sync_users.jar run config/production.json
+> 0 4 * * * java -jar PATH/TO/sync-users.jar run config/production.json
 ```
 
