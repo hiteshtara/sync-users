@@ -33,7 +33,7 @@ module Configuration
     elsif FileTest.exists?(default_config_path)
       set_env_from_file(default_config_path)
     else
-      raise ArgumentError, "Only accept Hash or config file path: #{params_or_path}" 
+      raise ArgumentError, "Only accept Hash or config file path: #{params_or_path}"
     end
     unless required_params.empty?
       @params = @params.slice(*required_params)
@@ -54,7 +54,7 @@ module Configuration
     unless FileTest.exists?(path)
       raise IOError, "Config File Not Found: #{path}"
     end
-    @params = read_config(path) 
+    @params = read_config(path)
   end
 
   def read_config(path)

@@ -48,7 +48,7 @@ class CoreClient
   end
 
   def url(resource, params = {})
-    r = "#{base_url}/#{resource}" 
+    r = "#{base_url}/#{resource}"
     if params[:id]
       r += "/#{params[:id]}"
     end
@@ -136,7 +136,7 @@ class CoreClient
       h[:type] = 'error'
       h[:http_code] = @response.code
       h[:message] = @response.msg
-      h[:details] = JSON.parse(@response.body)['errors'] 
+      h[:details] = JSON.parse(@response.body)['errors']
     end
     r
   end

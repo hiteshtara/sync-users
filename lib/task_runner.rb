@@ -42,7 +42,7 @@ class TaskRunner
 
   def logger
     unless @logger
-      @logger = Logger.new(params['log'] || STDOUT) 
+      @logger = Logger.new(params['log'] || STDOUT)
       set_log_level(params['log_level'])
       @logger.level = get_log_level_value(params['log_level'])
     end

@@ -5,12 +5,14 @@ require 'awesome_print'
 require 'kim_client_switcher'
 require 'task_runner'
 require 'core_client'
+require 'user_synchronizer/user_util'
 require 'user_synchronizer/counter'
 require 'user_synchronizer/error_recorder'
 
 module UserSynchronizer
   class Base < TaskRunner
     include KimClientSwitcher
+    include UserSynchronizer::UserUtil
     include UserSynchronizer::Counter
     include UserSynchronizer::ErrorRecorder
 
@@ -30,7 +32,7 @@ module UserSynchronizer
         when 'delete'
           core_delete_user(h['user'], false)
         end
-      end 
+      end
       logger.info "RESULTS: #{counter}"
       logger.info "End Successfully"
       counter
@@ -48,7 +50,7 @@ module UserSynchronizer
             end
           end
         end
-      end 
+      end
     end
 
     def analyze_other_errors(params_or_path = nil)
@@ -56,7 +58,7 @@ module UserSynchronizer
         unless get_other_errors(err).empty?
           ap err
         end
-      end 
+      end
     end
 
     def show_sync_errors(params_or_path = nil)
@@ -126,6 +128,26 @@ module UserSynchronizer
       kim_users.select{ |h| h['email'] == email }
     end
 
+    #Returns users that were recently inserted into KC/COI user groups
+    def find_kim_new_group_members(days = 1, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      kim.find_new_group_members(params['target_user_groups'], days)
+    end
+
+    def show_kim_new_group_members(within_days = 3, params_or_path = nil)
+      r = find_kim_new_group_members(within_days, params_or_path)
+      ap r
+    end
+
+    def sync_only_new_group_members(params_or_path = nil, args = {})
+      days = args[:within_days] || 3
+      args[:src] = find_kim_new_group_members(days, params_or_path)
+      args[:core_no_cache] = true
+      args[:dry_run] = args.has_key?(:dry_run) ? args[:dry_run] : false
+      run(params_or_path, args)
+    end
+
     def find_core_user(username_or_email, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       core.get_user(username_or_email)
@@ -139,8 +161,7 @@ module UserSynchronizer
     def peek(username, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       b = find_kim_user(username)
-      #a = core_user(username) 
-      a = find_core_user(username) 
+      a = find_core_user(username)
 
       puts '--< CORE >' + '-' * 70
       if a
@@ -156,8 +177,8 @@ module UserSynchronizer
         puts 'KIM USER NOT FOUND'
       end
       puts '-' * 80
-      if a && b
-        puts "COMPARE #{compare_user(a, b)}"
+      if a && !a.empty? && b
+        puts "COMPARE #{compare_user(a.first, b)}"
         puts '-' * 80
       end
     end
@@ -170,8 +191,7 @@ module UserSynchronizer
         puts "KIM User Not Found: #{username}"
         return
       end
-      #user = core_user(username) 
-      user = find_core_user(username) 
+      user = find_core_user(username).first
       if user
         puts "Core User Found"
       end
@@ -201,43 +221,17 @@ module UserSynchronizer
       end
     end
 
-    def user_to_s(r)
-      sprintf("[%-7s] %8s %-12s %s", r['role'], r['schoolId'], r['username'], r['email']) 
-    end
-
-    def user_to_s_long(r)
-      user_to_s(r) + sprintf(" %s, %s", r['firstName'], r['lastName'])
-    end
-
-    def diff_user(a, b)
-      r = [] 
-      r << 'username' unless a['username'] == b['username']
-      r << 'schoolId' unless a['schoolId'] == b['schoolId']
-      r << 'email' unless a['email'].downcase == b['email'].downcase
-      r << 'firstName' unless a['firstName'].strip == b['firstName'].strip
-      r << 'lastName' unless a['lastName'].strip == b['lastName'].strip
-      #r << 'name' unless a['name'].strip == b['name'].strip
-      r << 'role' unless a['role'] == b['role']
-      r.map { |i| "[#{i.upcase}] #{a[i]} > #{b[i]}" }.join(', ')
-    end
-
-    # Ignore leading and trailing spaces of name; ??? core removes them ???
-    # Ignore case of email; ??? core make it all lowercase ???
-    def compare_user(a, b)
-      a['username'] == b['username'] && 
-      a['schoolId'] == b['schoolId'] && 
-      a['email'].downcase == b['email'].downcase && 
-      a['firstName'].strip == b['firstName'].strip && 
-      a['lastName'].strip == b['lastName'].strip && 
-      a['name'].strip == b['name'].strip && 
-      a['role'] == b['role']
-    end
-
     private
 
+    # args:
+    #   dry_run (boolean): disable DB update if true. (default false)
+    #   src (array of users): will be used for updating core MongoDB. (default kim_users)
+    #   core_no_cache (boolean): bulk load and cache core users if true. (default false)
     def do_task(args = {})
-      dry = args[:dry_run] ? true : false
-      sync_users(dry)
+      dry = args.has_key?(:dry_run) ? args[:dry_run] : false
+      src = args[:src] || kim_users
+      @core_access_method = args[:core_no_cache] ? :core_user_no_cache : :core_user
+      sync_users(src, dry)
     end
 
     def reset!
@@ -248,16 +242,17 @@ module UserSynchronizer
       @core = nil
       @core_users = nil
       @core_map = nil
+      @core_access_method = :core_user
     end
 
-    def sync_users(dry)
+    def sync_users(src, dry)
       reset_counter!
       set_error_out(params['sync_errors']) if params['sync_errors']
       logger.info 'Start Synchronizing Users'
-      kim_users.each do |original|
+      src.each do |original|
         increment_total
         #original['role'] = kim_admins.include?(original['schoolId']) ? 'admin' : 'user'
-        user = core_user(original['username'])
+        user = get_core_user(original['username'])
         if original['active'] == 'Y'
           if user
             if compare_user(original, user)
@@ -275,7 +270,7 @@ module UserSynchronizer
             increment_inactive
           end
         end
-      end 
+      end
       logger.info "RESULTS: #{counter}"
       logger.info "End Successfully"
       counter
@@ -285,7 +280,7 @@ module UserSynchronizer
       logger.info "ADD: #{user_to_s(new_user)}"
       if dry
         increment_added
-        return true 
+        return true
       end
       new_user['password'] = SecureRandom.uuid
       core.add_user(new_user)
@@ -304,7 +299,7 @@ module UserSynchronizer
       logger.info "UPD: #{user_to_s_long(cur_user)} => #{user_to_s_long(updated_user)} DIFF: #{diff_user(cur_user, updated_user)}"
       if dry
         increment_updated
-        return true 
+        return true
       end
       core.update_user(cur_user['id'], updated_user)
       if core.error? || core.failure?
@@ -322,7 +317,7 @@ module UserSynchronizer
       logger.info "DLT: #{user_to_s(cur_user)}"
       if dry
         increment_removed
-        return true 
+        return true
       end
       core.delete_user(cur_user['id'])
       if core.error? || core.failure?
@@ -417,8 +412,16 @@ module UserSynchronizer
       only_kim
     end
 
+    def get_core_user(username)
+      send(@core_access_method, username)
+    end
+
     def core_user(username)
       core_user_map[username]
+    end
+
+    def core_user_no_cache(username)
+      core.get_user(username).first
     end
 
     def core_user_map
@@ -452,7 +455,7 @@ module UserSynchronizer
       end
       nil
     end
-      
+
     def analyze_username_duplicates(err, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       name = err['new_user']['username']

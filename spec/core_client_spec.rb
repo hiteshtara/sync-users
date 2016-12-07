@@ -1,15 +1,7 @@
 require 'core_client'
+require 'user_synchronizer/user_util'
 
-def compare(a, b)
-  return false if a.nil? || b.nil?
-  a['username'] == b['username'] && 
-  a['schoolId'] == b['schoolId'] && 
-  a['email'].downcase == b['email'].downcase && 
-  a['firstName'].strip == b['firstName'].strip && 
-  a['lastName'].strip == b['lastName'].strip && 
-  a['name'].strip == b['name'].strip && 
-  a['role'] == b['role']
-end
+include UserSynchronizer::UserUtil
 
 def delete_user(client, school_id)
   res = client.get_user(school_id)
@@ -43,22 +35,22 @@ describe CoreClient do
 
   describe '#get_users' do
     it 'returns array of users' do
-      expect(cc.get_users.length > 0).to eq(true) 
-    end 
+      expect(cc.get_users.length > 0).to eq(true)
+    end
   end
 
   describe 'REST actions' do
     it 'does CRUD actions correctly' do
       delete_user(cc, user['schoolId'])
       cur = cc.add_user(user)
-      expect(compare(cur, user)).to eq(true)
+      expect(compare_user(cur, user)).to eq(true)
       uid = cur['id']
       cur = cc.get_user_by_id(uid)
-      expect(compare(cur, user)).to eq(true)
-      cur = cc.update_user(uid, updated_user) 
-      expect(compare(cur, updated_user)).to eq(true)
+      expect(compare_user(cur, user)).to eq(true)
+      cur = cc.update_user(uid, updated_user)
+      expect(compare_user(cur, updated_user)).to eq(true)
       cur = cc.get_user_by_id(uid)
-      expect(compare(cur, updated_user)).to eq(true)
+      expect(compare_user(cur, updated_user)).to eq(true)
       cc.delete_user(uid)
       cur = cc.get_user_by_id(uid)
       expect(cur).to be_nil
@@ -69,25 +61,25 @@ describe CoreClient do
     context 'without params' do
       it 'returns the url of a specified resource' do
         expect(cc.url('users')).to eq(url)
-      end 
+      end
     end
 
     context 'with params' do
       it 'returns the url of a specified resource' do
         expect(cc.url('users', limit: 1000, q: 'abc')).to eq(url + '?limit=1000&q=abc')
-      end 
+      end
     end
 
     context 'with params including id' do
       it 'returns the url of a specified resource' do
         expect(cc.url('users', id: '12345', limit: 1000, q: 'abc')).to eq(url + '/12345?limit=1000&q=abc')
-      end 
+      end
     end
 
     context 'with params including only id' do
       it 'returns the url of a specified resource' do
         expect(cc.url('users', id: '12345')).to eq(url + '/12345')
-      end 
+      end
     end
   end
 
@@ -97,11 +89,11 @@ describe CoreClient do
 
       it 'returns base url of api' do
         expect(cc.base_url).to eq('http://localhost:3000/api/v1')
-      end 
+      end
     end
 
     context 'with option' do
-      let(:opt) { { 
+      let(:opt) { {
         'api_scheme' => 'https',
         'api_host' => 'www.hawaii.edu',
         'api_port' => '9999',
@@ -111,7 +103,7 @@ describe CoreClient do
 
       it 'returns base url of api' do
         expect(cc.base_url).to eq('https://www.hawaii.edu:9999/api/v1')
-      end 
+      end
     end
   end
 
@@ -128,7 +120,7 @@ describe CoreClient do
     end
 
     context 'with options' do
-      let(:opt) { { 
+      let(:opt) { {
         'api_scheme' => 'https',
         'api_host' => 'www.hawaii.edu',
         'api_port' => '9999',

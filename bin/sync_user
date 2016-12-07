@@ -19,6 +19,7 @@ def usage
   puts "       bin/sync_user kim-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user update <USERNAME> [PATH-TO-CONFIG]"
   puts "       bin/sync_user find-kim-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
   puts "       bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
@@ -27,12 +28,14 @@ def usage
   puts "       bin/sync_user view-sql [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-core-only-users [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-kim-only-users [PATH-TO-CONFIG]"
+  puts "       bin/sync_user sync-only-recent [WITHIN-DAYS|3] [PATH-TO-CONFIG]"
+  puts "       bin/sync_user dry-sync-only-recent [WITHIN-DAYS|3] [PATH-TO-CONFIG]"
+  puts "       bin/sync_user view-only-recent [WITHIN-DAYS|3] [PATH-TO-CONFIG]"
   puts "       bin/sync_user help\n\n"
 end
 
 def show_config
   get_config
-  puts "Config: #{$config}"
   $usync.show_env $config
 end
 
@@ -42,7 +45,6 @@ end
 
 def check_core_status
   get_config
-  puts "Config: #{$config}"
   r = _check_core_status
   return true if r[:code] == 404
   if r[:code] == 401
@@ -59,7 +61,6 @@ end
 
 def check_kim_status
   get_config
-  puts "Config: #{$config}"
   _check_kim_status
 end
 
@@ -74,25 +75,25 @@ def pre_run
 end
 
 def print_time(start_time)
-  secs = (Time.now - start_time).to_i 
+  secs = (Time.now - start_time).to_i
   mins = secs / 60
-  secs %= 60 
+  secs %= 60
   puts "#{mins} mis #{secs} secs elapsed"
 end
 
 def dry_run
   start_time = Time.now
   get_config
-  puts "Config: #{$config}"
   pre_run
+  puts 'Start Dry Run'
   ap $usync.dry_run($config)
+  puts "End Successfully"
   print_time(start_time)
 end
 
 def run_sync
   start_time = Time.now
   get_config
-  puts "Config: #{$config}"
   pre_run
   puts 'Start Synchronizing Users'
   r = $usync.run($config)
@@ -104,14 +105,18 @@ end
 def peek
   username = ARGV.shift
   get_config
-  puts "Config: #{$config}"
   $usync.peek username, $config
+end
+
+def update
+  username = ARGV.shift
+  get_config
+  $usync.force_update username, $config
 end
 
 def find_kim_user
   query = ARGV.shift
   get_config
-  puts "Config: #{$config}"
   if query =~ /@/
     ap($usync.find_all_kim_users_by_email(query, $config))
   else
@@ -122,37 +127,52 @@ end
 def find_core_user
   query = ARGV.shift
   get_config
-  puts "Config: #{$config}"
   ap $usync.find_core_user query, $config
 end
 
 def view_errors
   get_config
-  puts "Config: #{$config}"
   $usync.show_sync_errors $config
 end
 
 def view_sql
   get_config
-  puts "Config: #{$config}"
   $usync.show_sql $config
 end
 
 def view_core_only_users
   get_config
-  puts "Config: #{$config}"
   $usync.show_core_only_users $config
 end
 
 def view_kim_only_users
   get_config
-  puts "Config: #{$config}"
   $usync.show_kim_only_users $config
+end
+
+def sync_only_new_group_members(dry = false)
+  days = ARGV.shift || 3
+  start_time = Time.now
+  get_config
+  pre_run
+  puts "Sync only users that were added to user group within #{days} days"
+  puts "This is a DRY run: not update database" if dry
+  puts "Start#{' Dry' if dry} Run"
+  args = { within_days: days, dry_run: dry }
+  ap $usync.sync_only_new_group_members($config, args)
+  puts "End Successfully"
+  print_time(start_time)
+end
+
+def view_new_group_members
+  days = ARGV.shift || 3
+  get_config
+  puts "Show only users that were added to user group within #{days} days"
+  $usync.show_kim_new_group_members days, $config
 end
 
 def analyze_duplicates
   get_config
-  puts "Config: #{$config}"
   $usync.analyze_duplicates $config
 end
 
@@ -165,7 +185,6 @@ def retry_errors
   end
   start_time = Time.now
   get_config
-  puts "Config: #{$config}"
   pre_run
   ap $usync.retry_errors(fname, $config)
   print_time(start_time)
@@ -177,7 +196,7 @@ end
 
 def set_library_path
   lib_dir = File.expand_path('../lib', File.dirname(__FILE__))
-  set_local_gem_paths # NOTE disable this line if you do NOT want to use the local gems 
+  set_local_gem_paths # NOTE disable this line if you do NOT want to use the local gems
   $:.unshift(lib_dir)
 end
 
@@ -195,6 +214,7 @@ def get_config
     usage
     exit 0
   end
+  puts "Config: #{$config}"
 end
 
 if ARGV.empty?
@@ -225,6 +245,8 @@ when 'core-status'
   end
 when 'peek'
   peek
+when 'update'
+  update
 when 'find-kim-user'
   find_kim_user
 when 'find-core-user'
@@ -237,6 +259,12 @@ when 'view-core-only-users'
   view_core_only_users
 when 'view-kim-only-users'
   view_kim_only_users
+when 'sync-only-recent'
+  sync_only_new_group_members(false)
+when 'dry-sync-only-recent'
+  sync_only_new_group_members(true)
+when 'view-only-recent'
+  view_new_group_members
 when 'analyze-duplicates'
   analyze_duplicates
 when 'retry-errors'

@@ -87,7 +87,7 @@ class KimUsersJdbc < KimUsersBase
           cursor.get_string(i)
         end
     end
-    r 
+    r
   end
 
   def exec_sql(sql)
@@ -129,7 +129,7 @@ class KimUsersJdbc < KimUsersBase
       logger.error(e.backtrace.join("\n"))
       logger.error($CLASSPATH)
       @status = 'Open Error'
-    end 
+    end
     false
   end
 

@@ -81,7 +81,7 @@ export JRUBY_OPTS="J-Xmx2048m"
 ```
 Install Ruby 2.0 or higher (2.3 recommended)
 Install latest RubyGems
-Install latest Bundler 
+Install latest Bundler
 > bundle install
 ```
 
@@ -208,6 +208,9 @@ See the details for Usage
 > bin/sync_user view-sql [PATH-TO-CONFIG]
 > bin/sync_user view-core-only-users [PATH-TO-CONFIG]
 > bin/sync_user view-kim-only-users [PATH-TO-CONFIG]
+> bin/sync_user sync-only-recent [WITHIN-DAYS|3] [PATH-TO-CONFIG]
+> bin/sync_user dry-sync-only-recent [WITHIN-DAYS|3] [PATH-TO-CONFIG]
+> bin/sync_user view-only-recent [WITHIN-DAYS|3] [PATH-TO-CONFIG]
 > bin/sync_user help
 ```
 

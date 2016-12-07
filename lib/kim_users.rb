@@ -70,7 +70,7 @@ class KimUsers < KimUsersBase
       logger.error(e.to_s)
       logger.error(e.backtrace.join("\n"))
       @status = 'Open Error'
-    end 
+    end
     false
   end
 

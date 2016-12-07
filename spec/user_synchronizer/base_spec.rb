@@ -93,30 +93,30 @@ describe UserSynchronizer::Base do
       'email'=>'johnconnor@gmail.com', 'role'=>'user'
     }
   }
-
-  let(:sync) { UserSynchronizer::Base.new }
   let(:config) { './config/test.json' }
-  let(:cnt1) { sync.send :counter }
-  let(:cnt2) { sync.send :counter }
-
-  before do
-    allow(sync).to receive(:kim_users).and_return(kim_users, kim_users_updated)
-    #allow(sync).to receive(:kim_admins).and_return(kim_admins)
-    allow(sync).to receive(:core_users).and_return(core_users, core_users_updated)
-  end
 
   describe '#run' do
+    let(:sync) { UserSynchronizer::Base.new }
+    let(:cnt1) { sync.send :counter }
+    let(:cnt2) { sync.send :counter }
+
+    before do
+      allow(sync).to receive(:kim_users).and_return(kim_users, kim_users_updated)
+      #allow(sync).to receive(:kim_admins).and_return(kim_admins)
+      allow(sync).to receive(:core_users).and_return(core_users, core_users_updated)
+    end
+
     it 'synchronizes users correctly' do
       allow(sync).to receive(:core_update_user) do
-        cnt1[:updated] += 1 
+        cnt1[:updated] += 1
         true
       end
       allow(sync).to receive(:core_delete_user) do
-        cnt1[:removed] += 1 
+        cnt1[:removed] += 1
         true
       end
       allow(sync).to receive(:core_add_user) do
-        cnt1[:added] += 1 
+        cnt1[:added] += 1
         true
       end
 
@@ -133,15 +133,15 @@ describe UserSynchronizer::Base do
       })
 
       allow(sync).to receive(:core_update_user) do
-        cnt2[:updated] += 1 
+        cnt2[:updated] += 1
         true
       end
       allow(sync).to receive(:core_delete_user) do
-        cnt2[:removed] += 1 
+        cnt2[:removed] += 1
         true
       end
       allow(sync).to receive(:core_add_user) do
-        cnt2[:added] += 1 
+        cnt2[:added] += 1
         true
       end
 
@@ -157,5 +157,94 @@ describe UserSynchronizer::Base do
         remove_errors: 0,
       })
     end
+  end
+
+  describe '#sync_only_new_group_members' do
+    let(:args) { { within_days: 3, dry_run: false } }
+
+    context 'with active/inactive users given' do
+      let(:sync) { UserSynchronizer::Base.new }
+      let(:cnt) { sync.send :counter }
+      let(:core_map) {
+        core_users.inject({}) { |h, r| h[r['username']] = r; h }
+      }
+
+      before do
+        allow(sync).to receive(:find_kim_new_group_members).and_return(kim_users)
+        allow(sync).to receive(:core_update_user) do
+          cnt[:updated] += 1
+          true
+        end
+        allow(sync).to receive(:core_delete_user) do
+          cnt[:removed] += 1
+          true
+        end
+        allow(sync).to receive(:core_add_user) do
+          cnt[:added] += 1
+          true
+        end
+        allow(sync).to receive(:core_user_no_cache) do |username|
+          core_map[username]
+        end
+      end
+
+      it 'inserts active users' do
+        expect(sync.sync_only_new_group_members(config, args)).to eq({
+          total: 5,
+          added: 4,
+          updated: 0,
+          removed: 0,
+          same: 0,
+          inactive: 1,
+          add_errors: 0,
+          update_errors: 0,
+          remove_errors: 0,
+        })
+      end
+    end
+
+    context 'with updated users given' do
+      let(:sync) { UserSynchronizer::Base.new }
+      let(:cnt) { sync.send :counter }
+      let(:core_map) {
+        core_users_updated.inject({}) { |h, r| h[r['username']] = r; h }
+      }
+
+      before do
+        allow(sync).to receive(:find_kim_new_group_members).and_return(kim_users_updated)
+        allow(sync).to receive(:core_update_user) do
+          cnt[:updated] += 1
+          true
+        end
+        allow(sync).to receive(:core_delete_user) do
+          cnt[:removed] += 1
+          true
+        end
+        allow(sync).to receive(:core_add_user) do
+          cnt[:added] += 1
+          true
+        end
+        allow(sync).to receive(:core_user_no_cache) do |username|
+          core_map[username]
+        end
+      end
+
+      it 'synchronizes users correctly' do
+        expect(sync.sync_only_new_group_members(config, args)).to eq({
+          total: 6,
+          added: 1,
+          updated: 2,
+          removed: 1,
+          same: 1,
+          inactive: 1,
+          add_errors: 0,
+          update_errors: 0,
+          remove_errors: 0,
+        })
+      end
+    end
+  end
+
+  describe '#force_update' do
   end
 end

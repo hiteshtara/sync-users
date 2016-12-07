@@ -37,7 +37,7 @@ module UserSynchronizer
 
     def record_error(h)
       h = core.record_error(h)
-      error_out.puts JSON.generate(h) 
+      error_out.puts JSON.generate(h)
     end
   end
 end

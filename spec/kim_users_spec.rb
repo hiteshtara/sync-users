@@ -44,4 +44,16 @@ describe TARGET do
       #expect(kim.users).not_to be_empty
     end
   end
+
+  describe '#find_new_group_members' do
+    let(:kim) { create_target }
+    let(:groups) { ['UH KC Users', 'UH COI Users'] }
+    let(:within_days) { 365 }
+
+    # NOTE if no group member is created within within_days, this test will fail
+    #      make within_days enough large
+    it 'returns users that were inserted into KC/COI groups' do
+      expect(kim.find_new_group_members(groups, within_days)).not_to be_empty
+    end
+  end
 end

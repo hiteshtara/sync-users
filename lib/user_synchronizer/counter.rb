@@ -1,12 +1,12 @@
 module UserSynchronizer
   module Counter
-    private 
+    private
 
     NORMAL_ITEMS = %i(total added updated removed same inactive)
     ERROR_ITEMS = %i(add_errors update_errors remove_errors)
     ITEMS = NORMAL_ITEMS + ERROR_ITEMS
 
-    def counter 
+    def counter
       @counter ||= generate_counter
     end
 
@@ -27,7 +27,7 @@ module UserSynchronizer
 
     ITEMS.each do |i|
       method = "increment_#{i}"
-      unless respond_to? method 
+      unless respond_to? method
         define_method method do
           counter[i] += 1
         end

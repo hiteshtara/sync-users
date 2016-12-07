@@ -57,7 +57,7 @@ describe Configuration do
       end
     end
   end
-  
+
   context 'given the path to configuration file' do
     subject(:config) { TestConfiguration.new }
 
@@ -82,7 +82,7 @@ describe Configuration do
       end
     end
   end
-  
+
   context 'given Hash as an argument' do
     subject(:config) { TestConfiguration.new }
     let(:args) { { a: 1, b: 'bbb', c: 333 } }

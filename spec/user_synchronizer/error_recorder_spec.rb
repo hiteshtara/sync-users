@@ -62,5 +62,5 @@ describe UserSynchronizer::ErrorRecorder do
         expect(r).to eq(data[i])
       end
     end
-  end 
+  end
 end

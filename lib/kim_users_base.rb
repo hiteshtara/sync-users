@@ -8,7 +8,7 @@ class KimUsersBase
 
   DEFAULT_LOG_LEVEL = 'WARN'
   DEFAULT_HOST = 'localhost'
-  DEFAULT_PORT = 1521 
+  DEFAULT_PORT = 1521
 
   SELECT_KIM_ALL_USERS = <<-EOS
     SELECT p.PRNCPL_ID AS "schoolId"
@@ -161,7 +161,7 @@ class KimUsersBase
 
   def select_kim_users_by_groups_sql(groups = [])
     sql = SELECT_KIM_GROUP_USERS
-    unless groups.empty?
+    unless groups.nil? || groups.empty?
       sql += "      AND g.GRP_NM in ('" + groups.join("', '") + "')"
     end
     sql
@@ -175,6 +175,10 @@ class KimUsersBase
     SELECT_KIM_GROUP_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
   end
 
+  def select_new_group_members_sql(groups, days = 1)
+    select_kim_users_by_groups_sql(groups) + "      AND gm.LAST_UPDT_DT > sysdate-#{days}"
+  end
+
   def find_user(username)
     select_one(select_kim_user_by_name_sql(username))
   end
@@ -185,6 +189,11 @@ class KimUsersBase
 
   def find_all_by_email(email)
     select_all(select_kim_user_by_email_sql(email))
+  end
+
+  #Returns users that were recently inserted into KC/COI user groups
+  def find_new_group_members(groups, days = 1)
+    select_all(select_new_group_members_sql(groups, days))
   end
 
   def top_user
@@ -201,7 +210,7 @@ class KimUsersBase
     #unless @users
     #  @users = select_all(select_kim_users_sql(groups))
     #end
-    #@users 
+    #@users
     select_all(select_kim_users_sql(groups))
   end
 
@@ -228,7 +237,7 @@ class KimUsersBase
     unless @permission_assignees
       @permission_assignees = select_all(SELECT_PERMISSION_ASSIGNEES)
     end
-    @permission_assignees 
+    @permission_assignees
   end
 
   def role_ids
@@ -236,7 +245,7 @@ class KimUsersBase
     unless @role_ids
       @role_ids = select_all(SELECT_ROLE_IDS).map { |r| r['ROLE_ID']}
     end
-    @role_ids 
+    @role_ids
   end
 
   def show_errors
@@ -270,7 +279,7 @@ class KimUsersBase
   def select_all(sql)
     raise 'Must Override select_all'
   end
-  
+
   def record_error(e)
     @errors << {
       message:  e.to_s,
