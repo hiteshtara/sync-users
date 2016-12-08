@@ -18,10 +18,10 @@ def usage
   puts "       bin/sync_user env [PATH-TO-CONFIG]"
   puts "       bin/sync_user kim-status [PATH-TO-CONFIG]"
   puts "       bin/sync_user core-status [PATH-TO-CONFIG]"
-  puts "       bin/sync_user peek <USERNAME> [PATH-TO-CONFIG]"
-  puts "       bin/sync_user update <USERNAME> [PATH-TO-CONFIG]"
-  puts "       bin/sync_user find-kim-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
-  puts "       bin/sync_user find-core-user <USERNAME|EMAIL> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user peek <USERNAME|SCHOOLID> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user update <USERNAME|SCHOOLID> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user find-kim-user <USERNAME|EMAIL|SCHOOLID> [PATH-TO-CONFIG]"
+  puts "       bin/sync_user find-core-user <USERNAME|EMAIL|SCHOOLID> [PATH-TO-CONFIG]"
   puts "       bin/sync_user view-errors [PATH-TO-CONFIG]"
   puts "       bin/sync_user analyze-duplicates [PATH-TO-CONFIG]"
   puts "       bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]"
@@ -109,15 +109,17 @@ def peek
 end
 
 def update
-  username = ARGV.shift
+  username_or_school_id = ARGV.shift
   get_config
-  $usync.force_update username, $config
+  $usync.update_user username_or_school_id, $config
 end
 
 def find_kim_user
   query = ARGV.shift
   get_config
-  if query =~ /@/
+  if query =~ /^\d+$/
+    ap($usync.find_all_kim_users_by_id(query, $config))
+  elsif query =~ /@/
     ap($usync.find_all_kim_users_by_email(query, $config))
   else
     ap($usync.find_all_kim_users_by_name(query, $config))

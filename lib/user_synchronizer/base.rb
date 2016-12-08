@@ -18,6 +18,16 @@ module UserSynchronizer
 
     KEY = 'username'
 
+    def check_core_status(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      core.check_status
+    end
+
+    def check_kim_status(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      kim.ping ? true : false
+    end
+
     def retry_errors(fname, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       reset_counter!
@@ -75,6 +85,17 @@ module UserSynchronizer
       puts kim.select_kim_users_sql(params['target_user_groups'])
     end
 
+    def show_env(params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      puts '---< CONFIG >' + '-' * 67
+      super
+      puts '---< CORE >' + '-' * 69
+      core.show_env
+      puts '---< KIM >' + '-' * 70
+      kim.show_env
+      puts '-' * 80
+    end
+
     def show_kim_only_users(params_or_path = nil)
       set_env(params_or_path) if params_or_path
       only_kim = kim_only_users
@@ -93,75 +114,15 @@ module UserSynchronizer
       puts "TOTAL KIM #{kim_users.length},  CORE #{core_users.length},  ONLY CORE #{only_core.length}"
     end
 
-    def check_core_status(params_or_path = nil)
-      set_env(params_or_path) if params_or_path
-      core.check_status
-    end
-
-    def check_kim_status(params_or_path = nil)
-      set_env(params_or_path) if params_or_path
-      kim.ping ? true : false
-    end
-
-    def show_env(params_or_path = nil)
-      set_env(params_or_path) if params_or_path
-      puts '---< CONFIG >' + '-' * 67
-      super
-      puts '---< CORE >' + '-' * 69
-      core.show_env
-      puts '---< KIM >' + '-' * 70
-      kim.show_env
-      puts '-' * 80
-    end
-
-    def find_all_kim_users_by_name(username, params_or_path = nil)
-      return nil unless kim
-      set_env(params_or_path) if params_or_path
-      #kim.find_all_by_username(username)
-      kim_users.select{ |h| h['username'] == username }
-    end
-
-    def find_all_kim_users_by_email(email, params_or_path = nil)
-      return nil unless kim
-      set_env(params_or_path) if params_or_path
-      #kim.find_all_by_email(email)
-      kim_users.select{ |h| h['email'] == email }
-    end
-
-    #Returns users that were recently inserted into KC/COI user groups
-    def find_kim_new_group_members(days = 1, params_or_path = nil)
-      return nil unless kim
-      set_env(params_or_path) if params_or_path
-      kim.find_new_group_members(params['target_user_groups'], days)
-    end
-
     def show_kim_new_group_members(within_days = 3, params_or_path = nil)
       r = find_kim_new_group_members(within_days, params_or_path)
       ap r
     end
 
-    def sync_only_new_group_members(params_or_path = nil, args = {})
-      days = args[:within_days] || 3
-      args[:src] = find_kim_new_group_members(days, params_or_path)
-      args[:core_no_cache] = true
-      args[:dry_run] = args.has_key?(:dry_run) ? args[:dry_run] : false
-      run(params_or_path, args)
-    end
-
-    def find_core_user(username_or_email, params_or_path = nil)
+    def peek(username_or_school_id, params_or_path = nil)
       set_env(params_or_path) if params_or_path
-      core.get_user(username_or_email)
-    end
-
-    def dry_run(params_or_path = nil, args = {})
-      args.merge!(dry_run: true)
-      run(params_or_path, args)
-    end
-
-    def peek(username, params_or_path = nil)
-      set_env(params_or_path) if params_or_path
-      b = find_kim_user(username)
-      a = find_core_user(username)
+      b = find_kim_user(username_or_school_id)
+      a = find_core_user(username_or_school_id)
 
       puts '--< CORE >' + '-' * 70
       if a
@@ -183,42 +144,81 @@ module UserSynchronizer
       end
     end
 
-    def force_update(username)
-      original = find_kim_user(username)
-      if original
-        puts "KIM User Found"
+    #query: username or email or schoolId
+    def find_core_user(query, params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      core.get_user(query)
+    end
+
+    def find_kim_user(username_or_school_id)
+      return nil unless kim
+      if username_or_school_id =~ /^\d+$/
+        kim.find_user_by_id(username_or_school_id)
       else
-        puts "KIM User Not Found: #{username}"
+        kim.find_user(username_or_school_id)
+      end
+    end
+
+    def find_all_kim_users_by_name(username, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      #kim.find_all_by_username(username)
+      kim_users.select{ |h| h['username'] == username }
+    end
+
+    def find_all_kim_users_by_email(email, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      #kim.find_all_by_email(email)
+      kim_users.select{ |h| h['email'] == email }
+    end
+
+    def find_all_kim_users_by_id(school_id, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      kim.find_all_by_id(school_id)
+      #kim_users.select{ |h| h['schoolId'] == school_id }
+    end
+
+    #Returns users that were recently inserted into KC/COI user groups
+    def find_kim_new_group_members(days = 1, params_or_path = nil)
+      return nil unless kim
+      set_env(params_or_path) if params_or_path
+      kim.find_new_group_members(params['target_user_groups'], days)
+    end
+
+    def dry_run(params_or_path = nil, args = {})
+      args.merge!(dry_run: true)
+      run(params_or_path, args)
+    end
+
+    def sync_only_new_group_members(params_or_path = nil, args = {})
+      days = args[:within_days] || 3
+      args[:src] = find_kim_new_group_members(days, params_or_path)
+      args[:core_no_cache] = true
+      args[:dry_run] = args.has_key?(:dry_run) ? args[:dry_run] : false
+      run(params_or_path, args)
+    end
+
+    def update_user(username_or_school_id, params_or_path = nil)
+      set_env(params_or_path) if params_or_path
+      user = find_kim_user(username_or_school_id)
+      unless user
+        puts "No KIM User Found: #{username_or_school_id}"
         return
       end
-      user = find_core_user(username).first
-      if user
-        puts "Core User Found"
-      end
+      force_update(user, params_or_path)
+    end
 
-      if original['active'] == 'Y'
-        if user
-          if compare_user(original, user)
-            puts "SAME: No Update"
-          else
-            if core_update_user(user, original, false)
-              puts "Updated"
-            end
-          end
-        else
-          if core_add_user(original, false)
-            puts "Added"
-          end
-        end
-      else
-        if user
-          if core_delete_user(user, false)
-            puts "Deleted"
-          end
-        else
-          puts "Ignored"
-        end
+    def force_update(user, params_or_path = nil)
+      unless user
+        raise "No User Given"
       end
+      args = {
+        src: [ user ],
+        core_no_cache: true
+      }
+      run(params_or_path, args)
     end
 
     private
@@ -373,11 +373,6 @@ module UserSynchronizer
         @kim_users = kim.users(params['target_user_groups'])
       end
       @kim_users
-    end
-
-    def find_kim_user(username)
-      return nil unless kim
-      kim.find_user(username)
     end
 
     def kim_admins

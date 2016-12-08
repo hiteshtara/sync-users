@@ -77,8 +77,8 @@ class CoreClient
     get :users, limit: '1000000'
   end
 
-  def get_user_by_id(user_id)
-    get :users, id: user_id
+  def get_user_by_id(object_id)
+    get :users, id: object_id
   end
 
   def get_user(query)

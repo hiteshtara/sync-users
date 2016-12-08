@@ -1,44 +1,68 @@
 require 'kim_client_switcher'
 
 include KimClientSwitcher
-TARGET = send(:kim_user_client)
+KIMCLIENT = send(:kim_user_client)
 
-def create_target
+def create_kim_client
   path = File.expand_path('../config/test.json', File.dirname(__FILE__))
-  TARGET.new(config: path)
+  KIMCLIENT.new(config: path)
 end
 
-describe TARGET do
+describe KIMCLIENT do
+  let(:kim) { create_kim_client }
+  let(:e) { kim.top_user }
+
   describe '#ping' do
-    let(:kim) { create_target }
     it 'returns true' do
       expect(kim.ping).to eq(true)
     end
   end
 
   describe '#admin_users' do
-    let(:kim) { create_target }
-    it 'returns MBR_IDs of admin users' do
-      expect(kim.admin_users).to eq(["admin", "15340606", "21550012", "10953327", "20781608", "11363208"])
+    let(:admin_ids) { kim.admin_users.select{ |i| i =~ /^\d+$/ } }
+
+    it 'returns not empty array' do
+      expect(admin_ids).not_to be_empty
+    end
+
+    it 'returns active admin ids' do
+      admin_ids.each do |id|
+        user = kim.find_user_by_id(id)
+        expect(user).not_to be_nil
+        expect(user['role']).to eq('admin')
+      end
     end
   end
 
   describe '#top_user' do
-    let(:kim) { create_target }
     it 'returns first Kim users' do
       expect(kim.top_user).not_to be_nil
     end
   end
 
+  describe '#find_user' do
+    let(:r) { kim.find_user(e['username']) }
+
+    it 'find a user by username' do
+      expect(r).to eq(e)
+    end
+  end
+
+  describe '#find_user_by_id' do
+    let(:r) { kim.find_user_by_id(e['schoolId']) }
+
+    it 'find a user by username' do
+      expect(r).to eq(e)
+    end
+  end
+
   describe '#role_ids' do
-    let(:kim) { create_target }
     it 'returns role ids of administrators' do
       expect(kim.role_ids).to eq(["10028", "63"])
     end
   end
 
   describe '#users' do
-    let(:kim) { create_target }
     it 'returns all Kim users' do
       # NOTE takes a while
       #expect(kim.users).not_to be_empty
@@ -46,7 +70,6 @@ describe TARGET do
   end
 
   describe '#find_new_group_members' do
-    let(:kim) { create_target }
     let(:groups) { ['UH KC Users', 'UH COI Users'] }
     let(:within_days) { 365 }
 

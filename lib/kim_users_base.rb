@@ -175,6 +175,10 @@ class KimUsersBase
     SELECT_KIM_GROUP_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
   end
 
+  def select_kim_user_by_id_sql(school_id)
+    SELECT_KIM_GROUP_USERS + "      AND p.PRNCPL_ID = '#{school_id}'"
+  end
+
   def select_new_group_members_sql(groups, days = 1)
     select_kim_users_by_groups_sql(groups) + "      AND gm.LAST_UPDT_DT > sysdate-#{days}"
   end
@@ -183,12 +187,20 @@ class KimUsersBase
     select_one(select_kim_user_by_name_sql(username))
   end
 
+  def find_user_by_id(school_id)
+    select_one(select_kim_user_by_id_sql(school_id))
+  end
+
   def find_all_by_username(username)
     select_all(select_kim_user_by_name_sql(username))
   end
 
   def find_all_by_email(email)
     select_all(select_kim_user_by_email_sql(email))
+  end
+
+  def find_all_by_id(school_id)
+    select_all(select_kim_user_by_id_sql(school_id))
   end
 
   #Returns users that were recently inserted into KC/COI user groups
