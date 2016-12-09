@@ -102,18 +102,20 @@ def run_sync
   print_time(start_time)
 end
 
-def peek
-  username = ARGV.shift
-  get_config
-  $usync.peek username, $config
-end
-
 def update
   username_or_school_id = ARGV.shift
   get_config
   $usync.update_user username_or_school_id, $config
 end
 
+# No KIM group limit
+def peek
+  username = ARGV.shift
+  get_config
+  $usync.peek username, $config
+end
+
+# No KIM group limit
 def find_kim_user
   query = ARGV.shift
   get_config
@@ -147,6 +149,7 @@ def view_core_only_users
   $usync.show_core_only_users $config
 end
 
+# With KIM group limit
 def view_kim_only_users
   get_config
   $usync.show_kim_only_users $config

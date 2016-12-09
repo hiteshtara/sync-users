@@ -383,7 +383,7 @@ describe UserSynchronizer::Base do
       let(:query) { 'username' }
 
       it 'calls KimUsers#find_user' do
-        expect(kim).to receive(:find_user).with(query)
+        expect(kim).to receive(:find_user).with(query, 'all')
         sync.find_kim_user(query)
       end
     end
@@ -392,8 +392,32 @@ describe UserSynchronizer::Base do
       let(:query) { '1234567' }
 
       it 'calls KimUsers#find_user' do
-        expect(kim).to receive(:find_user_by_id).with(query)
+        expect(kim).to receive(:find_user_by_id).with(query, 'all')
         sync.find_kim_user(query)
+      end
+    end
+  end
+
+  describe '#find_kim_group_member' do
+    let(:sync) { UserSynchronizer::Base.new }
+    let(:kim) { sync.send :kim }
+    let(:groups) { ['UH KC Users', 'UH COI Users'] }
+
+    context 'with username given' do
+      let(:query) { 'username' }
+
+      it 'calls KimUsers#find_user' do
+        expect(kim).to receive(:find_user).with(query, groups)
+        sync.find_kim_group_member(query)
+      end
+    end
+
+    context 'with schoolId given' do
+      let(:query) { '1234567' }
+
+      it 'calls KimUsers#find_user' do
+        expect(kim).to receive(:find_user_by_id).with(query, groups)
+        sync.find_kim_group_member(query)
       end
     end
   end

@@ -150,33 +150,38 @@ module UserSynchronizer
       core.get_user(query)
     end
 
-    def find_kim_user(username_or_school_id)
+    #Returns a user that belongs to KC/COI user groups
+    def find_kim_group_member(username_or_school_id)
+      find_kim_user(username_or_school_id, params['target_user_groups'])
+    end
+
+    def find_kim_user(username_or_school_id, groups = 'all')
       return nil unless kim
       if username_or_school_id =~ /^\d+$/
-        kim.find_user_by_id(username_or_school_id)
+        kim.find_user_by_id(username_or_school_id, groups)
       else
-        kim.find_user(username_or_school_id)
+        kim.find_user(username_or_school_id, groups)
       end
     end
 
     def find_all_kim_users_by_name(username, params_or_path = nil)
       return nil unless kim
       set_env(params_or_path) if params_or_path
-      #kim.find_all_by_username(username)
-      kim_users.select{ |h| h['username'] == username }
+      kim.find_all_by_name(username, 'all')
+      #kim_users.select{ |h| h['username'] == username }
     end
 
     def find_all_kim_users_by_email(email, params_or_path = nil)
       return nil unless kim
       set_env(params_or_path) if params_or_path
-      #kim.find_all_by_email(email)
-      kim_users.select{ |h| h['email'] == email }
+      kim.find_all_by_email(email, 'all')
+      #kim_users.select{ |h| h['email'] == email }
     end
 
     def find_all_kim_users_by_id(school_id, params_or_path = nil)
       return nil unless kim
       set_env(params_or_path) if params_or_path
-      kim.find_all_by_id(school_id)
+      kim.find_all_by_id(school_id, 'all')
       #kim_users.select{ |h| h['schoolId'] == school_id }
     end
 
@@ -443,7 +448,8 @@ module UserSynchronizer
     def analyze_email_duplicates(err, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       email = err['new_user']['email']
-      users = find_all_kim_users_by_email(email, params_or_path = nil)
+      #users = find_all_kim_users_by_email(email, params_or_path = nil)
+      users = kim_users.select{ |h| h['email'] == email }
       puts '--< EMAIL DUPLICATES >' + '-' * 78
       users.each do |r|
         puts user_to_s_long(r)
@@ -454,7 +460,8 @@ module UserSynchronizer
     def analyze_username_duplicates(err, params_or_path = nil)
       set_env(params_or_path) if params_or_path
       name = err['new_user']['username']
-      users = find_all_kim_users_by_name(name, params_or_path = nil)
+      #users = find_all_kim_users_by_name(name, params_or_path = nil)
+      users = kim_users.select{ |h| h['username'] == username }
       puts '--< USERNAME DUPLICATES >' + '-' * 75
       users.each do |r|
         puts user_to_s_long(r)

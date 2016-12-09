@@ -10,78 +10,44 @@ class KimUsersBase
   DEFAULT_HOST = 'localhost'
   DEFAULT_PORT = 1521
 
-  SELECT_KIM_ALL_USERS = <<-EOS
+  SQL_SELECT_BASE = <<-EOS
     SELECT p.PRNCPL_ID AS "schoolId"
-              ,p.PRNCPL_NM AS "username"
-              ,p.ACTV_IND AS "active"
-              ,n.FIRST_NM AS "firstName"
-              ,n.LAST_NM AS "lastName"
-              ,n.LAST_NM || ', ' || n.FIRST_NM AS "name"
-              ,e.EMAIL_ADDR AS "email"
-              ,nvl(admins.role,'user') AS "role"
-        FROM KRIM_PRNCPL_T p
-            ,KRIM_ENTITY_NM_T n
-            ,KRIM_ENTITY_EMAIL_T e
-            ,(SELECT p.PRNCPL_ID, p.PRNCPL_NM AS userid, 'admin' AS role
-               FROM KRIM_PERM_T perm
-                   ,KRIM_ROLE_PERM_T rp
-                   ,KRIM_ROLE_T r
-                   ,KRIM_ROLE_MBR_T m
-                   ,KRIM_PRNCPL_T p
-               WHERE perm.NM = 'Modify Entity'
-                 AND perm.PERM_ID = rp.PERM_ID
-                 AND r.ROLE_ID = rp.ROLE_ID
-                 AND m.ROLE_ID = r.ROLE_ID
-                 AND m.MBR_TYP_CD = 'P'
-                 AND m.ACTV_TO_DT is null
-                 AND m.MBR_ID = p.PRNCPL_ID) admins
-        WHERE p.PRNCPL_ID = n.ENTITY_ID
-          AND n.DFLT_IND = 'Y' -- get default name
-          AND n.ACTV_IND = 'Y' -- active name
-          AND p.PRNCPL_ID = e.ENTITY_ID
-          AND e.DFLT_IND = 'Y' -- get default email
-          AND e.ACTV_IND = 'Y' -- active email
-          AND p.PRNCPL_ID = admins.PRNCPL_ID(+)
+          ,p.PRNCPL_NM AS "username"
+          ,p.ACTV_IND AS "active"
+          ,n.FIRST_NM AS "firstName"
+          ,n.LAST_NM AS "lastName"
+          ,n.LAST_NM || ', ' || n.FIRST_NM AS "name"
+          ,e.EMAIL_ADDR AS "email"
+          ,nvl(admins.role,'user') AS "role"
   EOS
 
-  # Returns users that belong to a group
-  SELECT_KIM_GROUP_USERS = <<-EOS
-    SELECT p.PRNCPL_ID AS "schoolId"
-              ,p.PRNCPL_NM AS "username"
-              ,p.ACTV_IND AS "active"
-              ,n.FIRST_NM AS "firstName"
-              ,n.LAST_NM AS "lastName"
-              ,n.LAST_NM || ', ' || n.FIRST_NM AS "name"
-              ,e.EMAIL_ADDR AS "email"
-              ,nvl(admins.role,'user') AS "role"
-        FROM KRIM_PRNCPL_T p
-            ,KRIM_ENTITY_NM_T n
-            ,KRIM_ENTITY_EMAIL_T e
-            ,KRIM_GRP_MBR_T gm
-            ,KRIM_GRP_T g
-            ,(SELECT p.PRNCPL_ID, p.PRNCPL_NM AS userid, 'admin' AS role
-               FROM KRIM_PERM_T perm
-                   ,KRIM_ROLE_PERM_T rp
-                   ,KRIM_ROLE_T r
-                   ,KRIM_ROLE_MBR_T m
-                   ,KRIM_PRNCPL_T p
-               WHERE perm.NM = 'Modify Entity'
-                 AND perm.PERM_ID = rp.PERM_ID
-                 AND r.ROLE_ID = rp.ROLE_ID
-                 AND m.ROLE_ID = r.ROLE_ID
-                 AND m.MBR_TYP_CD = 'P'
-                 AND m.ACTV_TO_DT is null
-                 AND m.MBR_ID = p.PRNCPL_ID) admins
-        WHERE p.PRNCPL_ID = n.ENTITY_ID
-          AND n.DFLT_IND = 'Y' -- get default name
-          AND n.ACTV_IND = 'Y' -- active name
-          AND p.PRNCPL_ID = e.ENTITY_ID
-          AND e.DFLT_IND = 'Y' -- get default email
-          AND e.ACTV_IND = 'Y' -- active email
-          AND p.PRNCPL_ID = admins.PRNCPL_ID(+)
-          AND g.GRP_ID = gm.GRP_ID
-          AND gm.actv_to_dt is null
-          AND gm.MBR_ID = p.PRNCPL_ID
+  SQL_FROM_BASE = <<-EOS
+      FROM KRIM_PRNCPL_T p
+          ,KRIM_ENTITY_NM_T n
+          ,KRIM_ENTITY_EMAIL_T e
+          ,(SELECT p.PRNCPL_ID, p.PRNCPL_NM AS userid, 'admin' AS role
+              FROM KRIM_PERM_T perm
+                  ,KRIM_ROLE_PERM_T rp
+                  ,KRIM_ROLE_T r
+                  ,KRIM_ROLE_MBR_T m
+                  ,KRIM_PRNCPL_T p
+             WHERE perm.NM = 'Modify Entity'
+               AND perm.PERM_ID = rp.PERM_ID
+               AND r.ROLE_ID = rp.ROLE_ID
+               AND m.ROLE_ID = r.ROLE_ID
+               AND m.MBR_TYP_CD = 'P'
+               AND m.ACTV_TO_DT is null
+               AND m.MBR_ID = p.PRNCPL_ID) admins
+  EOS
+
+  SQL_WHERE_BASE = <<-EOS
+     WHERE p.PRNCPL_ID = n.ENTITY_ID
+       AND n.DFLT_IND = 'Y' -- get default name
+       AND n.ACTV_IND = 'Y' -- active name
+       AND p.PRNCPL_ID = e.ENTITY_ID
+       AND e.DFLT_IND = 'Y' -- get default email
+       AND e.ACTV_IND = 'Y' -- active email
+       AND p.PRNCPL_ID = admins.PRNCPL_ID(+)
   EOS
 
   SELECT_ROLE_IDS = <<-EOS
@@ -147,60 +113,79 @@ class KimUsersBase
     ap params
   end
 
-  def select_kim_users_sql(groups = nil)
-    if groups && !groups.empty?
-      if groups == 'all'
-        SELECT_KIM_ALL_USERS
-      else
-        select_kim_users_by_groups_sql(groups)
-      end
+  def select_kim_users_sql(groups = nil, &block)
+    if groups == 'all'
+      all_users_sql(&block)
     else
-      SELECT_KIM_GROUP_USERS
+      group_members_sql(groups, &block)
     end
   end
 
-  def select_kim_users_by_groups_sql(groups = [])
-    sql = SELECT_KIM_GROUP_USERS
+  def all_users_sql(&block)
+    generate_sql(&block)
+  end
+
+  # Returns users that belong to a group
+  def group_members_sql(groups = [], &block)
+    opt = {
+      tbls: [
+        'KRIM_GRP_MBR_T gm',
+        'KRIM_GRP_T g',
+      ],
+      conds: [
+        "gm.GRP_ID = g.GRP_ID",
+        "gm.ACTV_TO_DT is null",
+        "gm.MBR_ID = p.PRNCPL_ID",
+      ]
+    }
     unless groups.nil? || groups.empty?
-      sql += "      AND g.GRP_NM in ('" + groups.join("', '") + "')"
+      opt[:conds] << "g.GRP_NM in ('" + groups.join("', '") + "')"
     end
-    sql
+    generate_sql(opt, &block)
   end
 
-  def select_kim_user_by_name_sql(name)
-    SELECT_KIM_GROUP_USERS + "      AND p.PRNCPL_NM = '#{name}'"
+  def select_kim_user_by_name_sql(name, groups = [])
+    select_kim_users_sql(groups) do |opt|
+      opt[:conds] << "p.PRNCPL_NM = '#{name}'"
+    end
   end
 
-  def select_kim_user_by_email_sql(email)
-    SELECT_KIM_GROUP_USERS + "      AND e.EMAIL_ADDR = '#{email}'"
+  def select_kim_user_by_email_sql(email, groups = [])
+    select_kim_users_sql(groups) do |opt|
+      opt[:conds] << "e.EMAIL_ADDR = '#{email}'"
+    end
   end
 
-  def select_kim_user_by_id_sql(school_id)
-    SELECT_KIM_GROUP_USERS + "      AND p.PRNCPL_ID = '#{school_id}'"
+  def select_kim_user_by_id_sql(school_id, groups = [])
+    select_kim_users_sql(groups) do |opt|
+      opt[:conds] << "p.PRNCPL_ID = '#{school_id}'"
+    end
   end
 
   def select_new_group_members_sql(groups, days = 1)
-    select_kim_users_by_groups_sql(groups) + "      AND gm.LAST_UPDT_DT > sysdate-#{days}"
+    select_kim_users_sql(groups) do |opt|
+      opt[:conds] << "gm.LAST_UPDT_DT > sysdate-#{days}"
+    end
   end
 
-  def find_user(username)
-    select_one(select_kim_user_by_name_sql(username))
+  def find_user(username, groups = nil)
+    select_one(select_kim_user_by_name_sql(username, groups))
   end
 
-  def find_user_by_id(school_id)
-    select_one(select_kim_user_by_id_sql(school_id))
+  def find_user_by_id(school_id, groups = nil)
+    select_one(select_kim_user_by_id_sql(school_id, groups))
   end
 
-  def find_all_by_username(username)
-    select_all(select_kim_user_by_name_sql(username))
+  def find_all_by_name(username, groups = nil)
+    select_all(select_kim_user_by_name_sql(username, groups))
   end
 
-  def find_all_by_email(email)
-    select_all(select_kim_user_by_email_sql(email))
+  def find_all_by_email(email, groups = nil)
+    select_all(select_kim_user_by_email_sql(email, groups))
   end
 
-  def find_all_by_id(school_id)
-    select_all(select_kim_user_by_id_sql(school_id))
+  def find_all_by_id(school_id, groups = nil)
+    select_all(select_kim_user_by_id_sql(school_id, groups))
   end
 
   #Returns users that were recently inserted into KC/COI user groups
@@ -301,5 +286,49 @@ class KimUsersBase
 
   def required_params
     %w(db_user db_pass db_host db_port db_sid log_level)
+  end
+
+  # opt: { selects, tbls, conds }
+  def generate_sql(opt = {}, &block)
+    adjust_sql_options(opt)
+    yield opt if block_given?
+    generate_select_phrase(opt[:selects]) +
+    generate_from_phrase(opt[:tbls]) +
+    generate_where_phrase(opt[:conds])
+  end
+
+  def adjust_sql_options(opt = {})
+    opt[:selects] = [] unless opt[:selects]
+    opt[:tbls] = [] unless opt[:tbls]
+    opt[:conds] = [] unless opt[:conds]
+    opt[:selects] = [ opt[:selects] ] if opt[:selects].is_a? String
+    opt[:tbls] = [ opt[:tbls] ] if opt[:tbls].is_a? String
+    opt[:conds] = [ opt[:conds] ] if opt[:conds].is_a? String
+  end
+
+  def generate_select_phrase(selects = nil)
+    SQL_SELECT_BASE
+  end
+
+  def generate_from_phrase(tbls = nil)
+    sql = SQL_FROM_BASE
+    padx = ' ' * 10
+    if tbls && !tbls.empty?
+      tbls.each do |t|
+        sql += padx + ',' + t + "\n"
+      end
+    end
+    sql
+  end
+
+  def generate_where_phrase(conds = nil)
+    sql = SQL_WHERE_BASE
+    pad7 = ' ' * 7
+    if conds && !conds.empty?
+      conds.each do |c|
+        sql += pad7 + 'AND ' + c + "\n"
+      end
+    end
+    sql
   end
 end
