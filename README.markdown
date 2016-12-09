@@ -205,7 +205,7 @@ See the details for Usage
 > bin/sync_user find-kim-user <USERNAME|EMAIL|SCHOOLID> [PATH-TO-CONFIG]
 > bin/sync_user find-core-user <USERNAME|EMAIL|SCHOOLID> [PATH-TO-CONFIG]
 > bin/sync_user view-errors [PATH-TO-CONFIG]
-> bin/sync_user analyze-duplicate [PATH-TO-CONFIG]
+> bin/sync_user analyze-duplicates [PATH-TO-CONFIG]
 > bin/sync_user retry-errors <FILENAME> [PATH-TO-CONFIG]
 > bin/sync_user view-sql [PATH-TO-CONFIG]
 > bin/sync_user view-core-only-users [PATH-TO-CONFIG]
