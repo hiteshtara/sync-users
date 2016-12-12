@@ -74,6 +74,7 @@ module KimUsersSql
       all_users_sql(&block)
     else
       group_members_sql(groups, &block)
+      #group_active_members_sql(groups, &block)
     end
   end
 
@@ -89,9 +90,9 @@ module KimUsersSql
         'KRIM_GRP_T g',
       ],
       conds: [
-        "gm.GRP_ID = g.GRP_ID",
-        "gm.ACTV_TO_DT is null",
-        "gm.MBR_ID = p.PRNCPL_ID",
+        'gm.GRP_ID = g.GRP_ID',
+        'gm.ACTV_TO_DT is null',
+        'gm.MBR_ID = p.PRNCPL_ID',
       ]
     }
     unless groups.nil? || groups.empty?
@@ -119,7 +120,7 @@ module KimUsersSql
   end
 
   def select_new_group_members_sql(groups, days = 1)
-    select_kim_users_sql(groups) do |opt|
+    group_members_sql(groups) do |opt|
       opt[:conds] << "gm.LAST_UPDT_DT > sysdate-#{days}"
     end
   end
